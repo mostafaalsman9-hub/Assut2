@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>منصة حضور علوم الرياضة</title>
+    <meta name="description" content="منصة الحضور والبيانات الأكاديمية لكلية علوم الرياضة بجامعة أسيوط." />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="منصة حضور علوم الرياضة" />
+    <meta property="og:description" content="منصة الحضور والبيانات الأكاديمية لكلية علوم الرياضة بجامعة أسيوط." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="منصة حضور علوم الرياضة" />
+    <meta name="twitter:description" content="منصة الحضور والبيانات الأكاديمية لكلية علوم الرياضة بجامعة أسيوط." />
+    <meta name="theme-color" content="#123e3b" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" as="style">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap">
+    <script>
+      window.PLATFORM_FIREBASE_CONFIG = {
+        apiKey: "AIzaSyACT86JrZzbIo03zmdak5fvWVmiRef14",
+        authDomain: "drali-f6b14.firebaseapp.com",
+        databaseURL: "https://drali-f6b14-default-rtdb.firebaseio.com",
+        projectId: "drali-f6b14",
+        storageBucket: "drali-f6b14.firebasestorage.app",
+        messagingSenderId: "726312902342",
+        appId: "1:726312902342:web:2bede86bf9ca3baeed81c7"
+      };
+    </script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+    <link rel="stylesheet" crossorigin href="./styles.css">
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./app-icon.jpg">
+    <style id="landing-style">
+*{box-sizing:border-box}
+:root{--landing-bg:#061321;--landing-bg2:#0a1c2e;--landing-gold:#f7c94a;--landing-gold2:#fff0a3;--landing-text:#fff;--landing-muted:#d7dce3;--landing-card:rgba(4,20,35,.91);--landing-border:rgba(255,205,74,.78);--landing-shadow:0 0 35px rgba(255,193,44,.25)}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:"Cairo",Arial,sans-serif;background:var(--landing-bg);color:var(--landing-text);overflow-x:hidden}
+body:has(#landing-shell.is-loading){cursor:progress}
+a{text-decoration:none;color:inherit}
+button{font:inherit}
+#landing-shell{min-height:100vh;background:var(--landing-bg)}
+#landing-shell[hidden]{display:none}
+#root[hidden]{display:none}
+.topbar{position:fixed;inset:0 0 auto;z-index:20;min-height:90px;padding:12px 3vw;display:flex;align-items:center;gap:30px;background:rgba(3,14,25,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,203,75,.55)}
+.brand{margin-right:auto;display:flex;align-items:center;gap:12px}
+.brand strong{display:block;color:var(--landing-gold);font-size:clamp(21px,2vw,31px);font-weight:900}
+.brand span{display:block;font-size:12px;color:#eee}
+.brand-mark{font-size:42px;filter:drop-shadow(0 0 12px rgba(255,205,74,.5))}
+.nav{display:flex;align-items:center;gap:clamp(18px,3vw,52px);font-weight:700}
+.nav a{padding:13px 2px;color:#f3f4f6;white-space:nowrap;transition:.25s}
+.nav a:hover,.nav .active{color:var(--landing-gold)}
+.nav .active{border-bottom:2px solid var(--landing-gold)}
+.nav span{font-size:22px;margin-right:6px;color:var(--landing-gold)}
+.theme-toggle{border:1px solid rgba(255,255,255,.55);border-radius:30px;padding:7px 12px;background:linear-gradient(90deg,#1d2a37,#a16c19);color:white;display:flex;gap:8px;align-items:center;cursor:pointer}
+.theme-toggle .sun{background:#f0b52d;color:#111;border-radius:50%;padding:3px 6px}
+.menu-btn{display:none;border:0;background:none;color:white;font-size:28px;cursor:pointer}
+.hero{min-height:100vh;position:relative;padding:130px 4vw 55px;display:flex;align-items:center;background:radial-gradient(circle at 72% 42%,rgba(35,82,104,.55),transparent 30%),linear-gradient(125deg,#061321 0%,#0b2437 52%,#071622 100%)}
+.hero-overlay{position:absolute;inset:0;background:radial-gradient(circle at 45% 45%,transparent 0 22%,rgba(0,9,18,.42) 58%,rgba(0,8,16,.8) 100%);pointer-events:none}
+.hero-grid{position:relative;z-index:1;width:min(1450px,100%);margin:auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(330px,.72fr);gap:clamp(28px,5vw,70px);align-items:center}
+.intro{text-align:center;padding:20px}
+.main-emblem{width:220px;height:190px;margin:0 auto 5px;position:relative;display:grid;place-items:center;color:var(--landing-gold);filter:drop-shadow(0 0 18px rgba(255,197,55,.5))}
+.cap{font-size:85px;position:absolute;top:-20px;transform:rotate(180deg)}
+.runner{font-size:90px;position:absolute;top:48px}
+.book{font-size:120px;position:absolute;bottom:-20px;transform:scaleX(1.5)}
+.intro h1{font-size:clamp(58px,8vw,105px);line-height:1;margin:0;color:#ffd45c;font-weight:900;text-shadow:0 4px 25px rgba(255,180,20,.28)}
+.gold-line{height:6px;width:min(330px,65%);margin:16px auto 22px;border-radius:100%;background:linear-gradient(90deg,transparent,var(--landing-gold),transparent);box-shadow:0 0 18px rgba(255,201,62,.75)}
+.lead{font-size:clamp(20px,2.4vw,32px);font-weight:700;margin:0}
+.sublead{font-size:clamp(17px,2vw,25px);margin:7px 0 30px;color:#f3f3f3}
+.actions{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
+.btn{min-width:245px;padding:15px 25px;border-radius:18px;border:1px solid var(--landing-gold);display:flex;justify-content:center;align-items:center;gap:18px;font-weight:800;cursor:pointer;transition:.25s}
+.btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(255,195,50,.2)}
+.btn:focus-visible,.nav a:focus-visible,.brand:focus-visible,.theme-toggle:focus-visible,.menu-btn:focus-visible{outline:3px solid var(--landing-gold2);outline-offset:3px}
+.btn:disabled{opacity:.72;cursor:wait;transform:none}
+.btn-primary{background:linear-gradient(135deg,#fff1a4,#eab337);color:#111;box-shadow:0 0 20px rgba(255,195,50,.35)}
+.btn-secondary{background:rgba(3,19,34,.85);color:#fff;box-shadow:0 0 18px rgba(255,195,50,.25)}
+.landing-status{margin:18px 0 0;color:var(--landing-gold2);font-size:13px}
+.info-card{background:linear-gradient(145deg,rgba(5,24,42,.96),rgba(3,16,29,.92));border:2px solid var(--landing-border);border-radius:24px;padding:25px 30px;box-shadow:var(--landing-shadow);text-align:right;backdrop-filter:blur(8px)}
+.university-logo{width:82px;height:100px;border:4px solid #dcae3d;border-radius:12px;background:#f8f0d7;color:#222;text-align:center;padding-top:12px;line-height:1.1;font-size:18px;font-weight:800;float:left;margin:0 0 12px 12px}
+.info-card h2{text-align:center;margin:0 0 5px;font-size:clamp(21px,2vw,31px)}
+.info-card h3{text-align:center;line-height:1.8;font-size:clamp(16px,1.5vw,21px);margin:0;clear:both}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--landing-gold),transparent);margin:18px 0}
+.info-card h4{font-size:19px;margin:12px 0 6px}.info-card h4 span{color:var(--landing-gold)}
+.person{border:1px solid #8d9cac;border-radius:22px;padding:7px 15px;text-align:center;margin:7px 0;font-weight:700;background:rgba(10,29,48,.8)}
+.main-person{border-color:#d9a936;background:linear-gradient(90deg,rgba(131,92,26,.65),rgba(20,37,52,.85))}
+.section{padding:90px 6vw;text-align:center;background:#071726}.section h2{font-size:38px;color:var(--landing-gold);margin:0 0 15px}.section p{color:var(--landing-muted);font-size:18px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.cards article{padding:30px;border:1px solid rgba(255,204,72,.45);border-radius:22px;background:rgba(10,31,49,.8)}.cards span{font-size:40px}.cards h3{color:#fff;font-size:24px}.cards p{font-size:16px}
+.contact{padding-bottom:50px}footer{text-align:center;padding:25px;background:#030d18;color:#bbb;border-top:1px solid rgba(255,202,62,.25)}
+body.light{--landing-bg:#eef4f5;--landing-text:#17333d;--landing-muted:#47616a}body.light #landing-shell{background:#eef4f5;color:#17333d}body.light .topbar{background:rgba(245,250,250,.92)}body.light .nav a{color:#23464d}body.light .hero{background:radial-gradient(circle at 72% 42%,rgba(215,171,54,.35),transparent 30%),linear-gradient(125deg,#eaf3f3,#cadfdf 52%,#f9f4df)}body.light .hero-overlay{background:radial-gradient(circle at 45% 45%,transparent 0 22%,rgba(255,255,255,.08) 58%,rgba(255,255,255,.32) 100%)}body.light .info-card{background:rgba(255,255,255,.82);color:#17333d}body.light .info-card h3,body.light .person{color:#264b50}body.light .section{background:#e8f1f2}body.light .cards article{background:rgba(255,255,255,.72)}body.light .cards h3{color:#17333d}
+@media(max-width:1050px){.topbar{gap:15px}.nav{gap:18px}.theme-toggle b{display:none}.hero-grid{grid-template-columns:1fr}.info-card{max-width:720px;width:100%;margin:auto}.intro{padding-top:20px}}
+@media(max-width:760px){.topbar{min-height:72px;padding:9px 15px}.brand-mark{font-size:32px}.brand strong{font-size:19px}.brand span{font-size:9px}.menu-btn{display:block}.theme-toggle{padding:5px 8px}.nav{display:none;position:absolute;top:72px;right:10px;left:10px;padding:15px;flex-direction:column;gap:4px;border-radius:16px;background:rgba(3,15,27,.97);border:1px solid rgba(255,205,74,.35)}.nav.open{display:flex}.nav a{width:100%;text-align:center}.hero{padding:100px 14px 35px;min-height:auto}.hero-grid{gap:20px}.main-emblem{transform:scale(.72);margin-top:-12px;margin-bottom:-25px}.intro h1{font-size:clamp(48px,16vw,76px)}.lead{font-size:18px}.sublead{font-size:15px;margin-bottom:22px}.actions{gap:10px}.btn{min-width:0;width:100%;padding:13px 15px}.info-card{padding:20px 15px;border-radius:18px}.info-card h2{font-size:20px}.info-card h3{font-size:14px}.info-card h4{font-size:16px}.person{font-size:14px;padding:6px}.university-logo{width:65px;height:82px;font-size:14px}.section{padding:55px 18px}.section h2{font-size:30px}.section p{font-size:15px}.cards{grid-template-columns:1fr}}
+@media(max-width:380px){.theme-toggle .moon{display:none}.brand span{display:none}.hero{padding-left:9px;padding-right:9px}.info-card{padding:15px 10px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+    </style>
+  </head>
+  <body>
+    <div id="landing-shell">
+      <header class="topbar">
+        <a class="brand" href="#home" aria-label="علوم الرياضة">
+          <div class="brand-mark" aria-hidden="true">🏃</div>
+          <div>
+            <strong>علوم الرياضة</strong>
+            <span>معًا نحو مستقبل أفضل</span>
+          </div>
+        </a>
+
+        <nav class="nav" aria-label="التنقل الرئيسي">
+          <a class="active" href="#home">الرئيسية <span aria-hidden="true">⌂</span></a>
+          <a href="#about">عن المنصة <span aria-hidden="true">ⓘ</span></a>
+          <a href="#services">الخدمات <span aria-hidden="true">▦</span></a>
+          <a href="#contact">تواصل معنا <span aria-hidden="true">☎</span></a>
+        </nav>
+
+        <button class="theme-toggle" type="button" aria-label="تبديل الوضع" aria-pressed="false">
+          <span class="moon" aria-hidden="true">☾</span><span class="sun" aria-hidden="true">☀</span>
+          <b>الوضع الليلي</b>
+        </button>
+        <button class="menu-btn" type="button" aria-label="فتح القائمة" aria-expanded="false">☰</button>
+      </header>
+
+      <main id="home" class="hero">
+        <div class="hero-overlay" aria-hidden="true"></div>
+        <div class="hero-grid">
+          <section class="intro">
+            <div class="main-emblem" aria-hidden="true">
+              <div class="cap">⌂</div>
+              <div class="runner">🏃</div>
+              <div class="book">⌁</div>
+            </div>
+            <h1>علوم الرياضة</h1>
+            <div class="gold-line" aria-hidden="true"></div>
+            <p class="lead">منصة إلكترونية لإدارة الحضور والدرجات</p>
+            <p class="sublead">لطلاب كلية علوم الرياضة - جامعة أسيوط</p>
+            <div class="actions">
+              <button class="btn btn-primary" type="button" data-open-app="register">حساب جديد <span aria-hidden="true">♟+</span></button>
+              <button class="btn btn-secondary" type="button" data-open-app="login">تسجيل الدخول <span aria-hidden="true">⇥</span></button>
+            </div>
+            <p class="landing-status" role="status" aria-live="polite" hidden></p>
+          </section>
+
+          <aside class="info-card">
+            <div class="university-logo">جامعة<br><b>أسيوط</b></div>
+            <h2>مكتب التدريب الميداني</h2>
+            <h3>بقسم المناهج وتدريس التربية الرياضية<br>كلية علوم الرياضة<br>جامعة أسيوط</h3>
+            <div class="divider"></div>
+            <h4>مدير المكتب <span aria-hidden="true">♟</span></h4>
+            <div class="person main-person">أ.د/ بكر أنور تهامي محمد</div>
+            <h4>أعضاء المكتب <span aria-hidden="true">♟♟</span></h4>
+            <div class="person">د/ حسن صدقة</div>
+            <div class="person">د/ هشام عبدالحليم</div>
+            <div class="person">د/ اسلام سالم</div>
+            <div class="person">د/ مصطفى عبدالحفيظ</div>
+            <div class="divider"></div>
+            <h4>رئيس القسم <span aria-hidden="true">♟</span></h4>
+            <div class="person main-person">أ.د/ أيمن عبده محمد محمد</div>
+          </aside>
+        </div>
+      </main>
+
+      <section id="about" class="section">
+        <h2>عن المنصة</h2>
+        <p>واجهة استقبال حديثة لمنصة علوم الرياضة، مصممة للعمل بسلاسة على الهاتف والتابلت والكمبيوتر.</p>
+      </section>
+      <section id="services" class="section cards">
+        <article><span aria-hidden="true">📊</span><h3>إدارة الدرجات</h3><p>متابعة درجات أعمال السنة والنتائج.</p></article>
+        <article><span aria-hidden="true">🗓️</span><h3>الحضور</h3><p>إدارة الحضور والغياب والتأخير.</p></article>
+        <article><span aria-hidden="true">🔔</span><h3>الإشعارات</h3><p>إرسال التنبيهات والمستجدات للمستخدمين.</p></article>
+      </section>
+      <section id="contact" class="section contact">
+        <h2>تواصل معنا</h2>
+        <p>مكتب التدريب الميداني - كلية علوم الرياضة - جامعة أسيوط</p>
+      </section>
+      <footer>© <span id="year"></span> علوم الرياضة - جامعة أسيوط</footer>
+    </div>
+    <div id="root" hidden></div>
+    <script type="module">
+(function () {
+  'use strict';
+
+  var shell = document.getElementById('landing-shell');
+  var root = document.getElementById('root');
+  var landingStyle = document.getElementById('landing-style');
+  var menuButton = document.querySelector('.menu-btn');
+  var nav = document.querySelector('.nav');
+  var themeButton = document.querySelector('.theme-toggle');
+  var status = document.querySelector('.landing-status');
+  var appStarted = false;
+
+  function closeMenu() {
+    if (!nav || !menuButton) return;
+    nav.classList.remove('open');
+    menuButton.setAttribute('aria-expanded', 'false');
+  }
+
+  function prepareAuthMode(mode) {
+    if (mode !== 'register') return;
+    var attempts = 0;
+    var chooseRegister = function () {
+      var tabs = document.querySelectorAll('.auth-tabs button');
+      if (tabs.length > 1) {
+        tabs[1].click();
+        return;
+      }
+      if (attempts++ < 20) window.setTimeout(chooseRegister, 100);
+    };
+    window.setTimeout(chooseRegister, 0);
+  }
+
+  function loadOriginalApp(mode) {
+    if (appStarted) return;
+    appStarted = true;
+    closeMenu();
+    if (shell) shell.classList.add('is-loading');
+    if (status) {
+      status.hidden = false;
+      status.textContent = 'يتم فتح المنصة...';
+    }
+    document.querySelectorAll('[data-open-app]').forEach(function (button) {
+      button.disabled = true;
+    });
+
+    import('./app.js')
+      .then(function () {
+        return import('./owner-controls.js');
+      })
+      .then(function () {
+        window.requestAnimationFrame(function () {
+          if (landingStyle) landingStyle.remove();
+          if (shell) shell.hidden = true;
+          if (root) root.hidden = false;
+          prepareAuthMode(mode);
+        });
+      })
+      .catch(function (error) {
+        console.error('تعذر تحميل التطبيق', error);
+        appStarted = false;
+        document.querySelectorAll('[data-open-app]').forEach(function (button) {
+          button.disabled = false;
+        });
+        if (shell) shell.classList.remove('is-loading');
+        if (status) {
+          status.hidden = false;
+          status.textContent = 'تعذر فتح المنصة. أعد المحاولة بعد التحقق من اتصال الإنترنت.';
+        }
+      });
+  }
+
+  if (menuButton && nav) {
+    menuButton.addEventListener('click', function () {
+      var isOpen = nav.classList.toggle('open');
+      menuButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    nav.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', closeMenu);
+    });
+  }
+
+  if (themeButton) {
+    themeButton.addEventListener('click', function () {
+      var light = document.body.classList.toggle('light');
+      themeButton.setAttribute('aria-pressed', light ? 'true' : 'false');
+      var label = themeButton.querySelector('b');
+      if (label) label.textContent = light ? 'الوضع النهاري' : 'الوضع الليلي';
+    });
+  }
+
+  document.querySelectorAll('[data-open-app]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      loadOriginalApp(button.getAttribute('data-open-app') || 'login');
+    });
+  });
+
+  var year = document.getElementById('year');
+  if (year) year.textContent = String(new Date().getFullYear());
+})();
+    </script>
+  </body>
+</html>
