@@ -223,9 +223,9 @@ body.light{--landing-bg:#eef4f5;--landing-text:#17333d;--landing-muted:#47616a}b
       button.disabled = true;
     });
 
-    import('./app.js')
+    import('./app.js?v=20260927-2')
       .then(function () {
-        return import('./owner-controls.js');
+        return import('./owner-controls.js?v=20260927-2');
       })
       .then(function () {
         window.requestAnimationFrame(function () {
