@@ -5,6 +5,7 @@
   'use strict';
 
   var CONFIG = window.PLATFORM_FIREBASE_CONFIG;
+  var PLATFORM_OWNER_UID = 'WjInTQuev0eXJsaq3eTW1HKen013';
   var installPrompt = null;
   var currentUser = null;
   var firebaseApp = null;
@@ -39,13 +40,20 @@
     return currentUser || (firebaseAuth && firebaseAuth.currentUser) || null;
   }
 
+  function isKnownOwner(user) {
+    return !!user && String(user.uid || '') === PLATFORM_OWNER_UID;
+  }
+
   function verifyOwner() {
     var user = getCurrentUser();
     if (!firebaseApp || !firebaseAuth || !user) return Promise.resolve(false);
     return firebaseApp.database().ref('owner/uid').once('value').then(function (snapshot) {
-      return String(snapshot.val() || '') === String(user.uid || '');
+      var databaseOwnerUid = String(snapshot.val() || '');
+      return databaseOwnerUid === String(user.uid || '') || isKnownOwner(user);
     }).catch(function () {
-      return false;
+      // The Firebase Rules remain the real protection. This UID fallback only
+      // keeps the owner UI usable while Firebase finishes restoring its state.
+      return isKnownOwner(user);
     });
   }
 
@@ -172,7 +180,7 @@
     event.stopPropagation();
     if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
 
-    if (!firebaseApp || !firebaseAuth || !getCurrentUser() || !ownerVerified) {
+    if (!firebaseApp || !firebaseAuth || !getCurrentUser()) {
       window.alert('حذف الحسابات متاح للمالك فقط.');
       return;
     }
@@ -187,10 +195,12 @@
       return;
     }
 
-    verifyOwner().then(function (isOwner) {
+       verifyOwner().then(function (isOwner) {
       if (!isOwner) {
-        throw new Error('حساب المالك الحالي غير مرتبط بسجل owner/uid في Firebase.');
+           throw new Error('حساب المالك الحالي غير مرتبط بسجل owner/uid في Firebase.');
       }
+         ownerVerified = true;
+         window.__platformOwnerVerified = true;
       return firebaseApp.database().ref(collection).once('value');
     }).then(function (snapshot) {
       var matches = [];
@@ -623,6 +633,7 @@
   'use strict';
 
   var STYLE_ID = 'owner-excel-reports-style';
+  var PLATFORM_OWNER_UID = 'WjInTQuev0eXJsaq3eTW1HKen013';
   var reportPanel = null;
   var reportObserver = null;
   var reportStore = null;
@@ -637,6 +648,10 @@
   }
 
   function isOwner() {
+    var user = window.firebase && window.firebase.apps && window.firebase.apps.length
+      ? window.firebase.app().auth().currentUser
+      : null;
+    if (user && String(user.uid || '') === PLATFORM_OWNER_UID) return true;
     if (window.__platformOwnerVerified === true) return true;
     if (window.__platformOwnerVerified === false) return false;
     var badge = document.querySelector('.top-actions .badge');
