@@ -61,6 +61,7 @@
     return verifyOwner().then(function (isOwner) {
       ownerVerified = isOwner === true;
       window.__platformOwnerVerified = ownerVerified;
+      window.dispatchEvent(new Event('platform-owner-status'));
       return ownerVerified;
     });
   }
@@ -282,6 +283,7 @@
         currentUser = user;
         ownerVerified = false;
         window.__platformOwnerVerified = false;
+        window.dispatchEvent(new Event('platform-owner-status'));
         if (!user) {
           refreshUi();
           return;
@@ -1182,6 +1184,7 @@
   function start() {
     if (reportObserver) return;
     installStyle();
+    window.addEventListener('platform-owner-status', syncOwnerUi);
     reportObserver = new MutationObserver(function () {
       window.clearTimeout(refreshTimer);
       refreshTimer = window.setTimeout(syncOwnerUi, 80);
