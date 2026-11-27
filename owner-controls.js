@@ -139,6 +139,18 @@
       '<div class="owner-experience-body"><textarea maxlength="5000" aria-label="خبرات المالك" placeholder="اكتب هنا خبراتك أو ملاحظاتك الخاصة بالمنصة..."></textarea>' +
       '<div class="owner-experience-actions"><span class="owner-experience-note">لا تظهر هذه الملاحظات إلا لحساب المالك.</span><button type="button" class="button primary small">حفظ الخبرات</button></div></div>';
     content.insertBefore(section, content.firstChild);
+    var head = section.querySelector('.owner-experience-head');
+    head.insertAdjacentHTML('beforeend', '<span class="oe-chev" aria-hidden="true">⌄</span>');
+    head.setAttribute('role', 'button'); head.setAttribute('tabindex', '0');
+    var opened = false;
+    try { opened = localStorage.getItem('assut_notes_open') === '1'; } catch (e) {}
+    section.classList.toggle('collapsed', !opened);
+    function toggleNotes() {
+      var c = section.classList.toggle('collapsed');
+      try { localStorage.setItem('assut_notes_open', c ? '0' : '1'); } catch (e) {}
+    }
+    head.addEventListener('click', toggleNotes);
+    head.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleNotes(); } });
     var textarea = section.querySelector('textarea');
     var saveButton = section.querySelector('button');
     if (ownerExperienceRef) {

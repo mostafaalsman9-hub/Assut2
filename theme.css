@@ -132,3 +132,44 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:linear-gradient(#6d5dfc,#0ea5a0);border-radius:8px}
 @media(max-width:720px){.stat-value{font-size:26px}.h1-ico{width:34px;height:34px;padding:8px}}
 @media(prefers-reduced-motion:reduce){body::before{display:none}}
+/* ===== v4: الشكل الداخلي لكل الأدوار ===== */
+body{background-image:radial-gradient(#6d5dfc12 1px,transparent 1px);background-size:22px 22px}
+.owner-experience{border-radius:16px;margin-bottom:18px}
+.owner-experience-head{cursor:pointer;padding:12px 16px;border-bottom:0;user-select:none}
+.owner-experience:not(.collapsed) .owner-experience-head{border-bottom:1px solid #f0e7cd}
+.oe-chev{font-size:18px;line-height:1;transition:transform .25s;color:#8d7a45}
+.owner-experience:not(.collapsed) .oe-chev{transform:rotate(180deg)}
+.owner-experience.collapsed .owner-experience-body{display:none}
+.owner-experience-head:focus-visible{outline:2px solid #6d5dfc;outline-offset:-2px}
+/* القائمة الجانبية */
+.sidebar .nav-item{transition:background .2s,transform .2s,color .2s;position:relative}
+.sidebar .nav-item:not(.active):hover{background:#ffffff14;transform:translateX(-3px)}
+.sidebar .nav-item.active{box-shadow:0 8px 20px #f5b73a55}
+/* الجداول */
+.table-wrap{border-radius:16px}
+.data-table thead th{position:sticky;top:0;z-index:1}
+.data-table tbody tr:nth-child(even){background:#6d5dfc08}
+.data-table tbody tr:hover{background:#6d5dfc14}
+.avatar{box-shadow:0 3px 10px #6d5dfc22;font-weight:800}
+/* البطاقات والإحصائيات */
+.stat-card{transition:transform .25s,box-shadow .25s}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px #3b2fb826}
+.card{transition:box-shadow .25s,transform .25s}
+.card:hover{box-shadow:0 14px 30px #3b2fb814}
+/* الحقول */
+.field input,.field select,.field textarea,input[type=search],input[type=date]{transition:border-color .2s,box-shadow .2s,background .2s}
+.field input:focus,.field select:focus,.field textarea:focus,input[type=search]:focus{border-color:#6d5dfc!important;box-shadow:0 0 0 4px #6d5dfc22!important;outline:none;background:#fff}
+/* شارات الحالة */
+.badge{font-weight:800;letter-spacing:.2px}
+.badge.green{background:linear-gradient(135deg,#d9f7ec,#c1f0de);color:#0b6b4d}
+.badge.red{background:linear-gradient(135deg,#ffe3e6,#ffd0d6);color:#a3162e}
+.badge.orange{background:linear-gradient(135deg,#fff0d1,#ffe1a6);color:#8a5200}
+.badge.blue{background:linear-gradient(135deg,#e1e8ff,#cfd9ff);color:#2b3fb0}
+/* حالة فارغة */
+.empty,.empty-state{border-radius:16px;background:linear-gradient(180deg,#fff,#f6f4ff)}
+/* الشريط العلوي */
+.top-actions .badge{background:linear-gradient(135deg,#6d5dfc22,#0ea5a033);color:#2c2a78;border:1px solid #6d5dfc22}
+/* المحتوى */
+.page-heading{position:relative}
+.page-heading p{color:#5b6475}
+:focus-visible{outline:2px solid #6d5dfc;outline-offset:2px}
