@@ -169,18 +169,20 @@
     var sdkPromise = null;
     var roleCache = {};
 
+    function dg(m) { try { if (global.__diag) global.__diag(m); } catch (e) {} }
     function loadSdk() {
       if (fb.firestore) return Promise.resolve();
+      dg('تحميل مكتبة Firestore');
       if (sdkPromise) return sdkPromise;
       sdkPromise = new Promise(function (res, rej) {
-        var fin = false, ok = function () { if (!fin) { fin = true; res(); } };
+        var fin = false, ok = function () { if (!fin) { fin = true; dg('Firestore جاهز'); res(); } };
         var load = function (src, next) {
           var s = env.document.createElement('script');
           s.src = src; s.onload = ok; s.onerror = function () { if (next) next(); else if (!fin) { fin = true; rej(new Error('تعذر تحميل Firestore')); } };
           env.document.head.appendChild(s);
         };
         load(FS_SDK, function () { load(FS_SDK_ALT); });
-        if (env.setTimeout) env.setTimeout(function () { if (!fin && !fb.firestore) load(FS_SDK_ALT); }, 7000);
+        if (env.setTimeout) env.setTimeout(function () { if (!fin && !fb.firestore) { dg('Firestore بطيء: مصدر بديل'); load(FS_SDK_ALT); } }, 7000);
       });
       return sdkPromise;
     }
@@ -207,7 +209,7 @@
     function hasSession() { try { return !!(env.document && env.document.documentElement.classList.contains('has-session')); } catch (e) { return true; } }
     function authReady() {
       if (curUser()) return Promise.resolve(curUser());
-      return sessionKnown().then(function () { return curUser() || (hasSession() ? authWait() : null); });
+      return sessionKnown().then(function () { if (curUser()) return curUser(); if (!hasSession()) return null; dg('انتظار استعادة الجلسة'); return authWait().then(function (u) { dg(u ? 'الجلسة جاهزة' : 'الجلسة لم تُستعد (مهلة)'); return u; }); });
     }
     function authWait() {
       if (curUser()) return Promise.resolve(curUser());
@@ -391,6 +393,12 @@
       });
     }
     function fetchFresh(path) {
+      var t0 = Date.now(); dg('قراءة ' + path);
+      var p = fetchFresh0(path);
+      p.then(function () { dg('تمت ' + path + ' ' + (Date.now() - t0) + 'ms'); }, function (e) { dg('فشلت ' + path + ': ' + ((e && e.message) || e)); });
+      return p;
+    }
+    function fetchFresh0(path) {
       var old = cacheGet(path, true), offline = env.navigator && env.navigator.onLine === false;
       var fallback = function (e) { if (old && isStudentSync()) return old.v; throw e; };
       if (offline) return Promise.resolve().then(function () { return fallback(new Error('لا يوجد اتصال بالإنترنت')); });
