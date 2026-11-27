@@ -14,6 +14,7 @@ function apiFor(ctx,uid){
   return __fsBuild('fs',{firebase:fbObj,localStorage:mkLs(),document:{visibilityState:'visible',addEventListener(){}},setInterval:()=>0,get navigator(){return global.navigator}});
 }
 let pass=0,fail=0;
+const assertRejects=async p=>{let ok=false;try{await p}catch(e){ok=true}if(!ok)throw new Error('expected rejection')};
 const T=async(name,fn)=>{try{await fn();pass++;console.log('PASS',name)}catch(e){fail++;console.log('FAIL',name,'-',String(e.message).split('\n')[0])}};
 (async()=>{
  const env=await initializeTestEnvironment({projectId:'demo-assut',firestore:{rules:fs.readFileSync('firestore.rules','utf8'),host:'127.0.0.1',port:8085}});
@@ -121,6 +122,43 @@ const T=async(name,fn)=>{try{await fn();pass++;console.log('PASS',name)}catch(e)
  await T('anyone (no auth) can read latestNotif',()=>assertSucceeds(env.unauthenticatedContext().firestore().collection('meta').doc('latestNotif').get()));
  await T('DENY student writes latestNotif',()=>assertFails(stu.firestore().collection('meta').doc('latestNotif').set({id:'x',ts:1})));
  await T('DENY unauth reads meta/schools',()=>assertFails(env.unauthenticatedContext().firestore().collection('meta').doc('schools').get()));
+ // ===== حضور المسؤول (يسجل جديداً فقط، مقفل بعد التسجيل) =====
+ {
+   const TADM='tAdmin1', OADM='tAdmin2', S1='tStud1', S2='tStud2', GT='tg1', D='2026-12-01', D2='2026-12-02';
+   await env.withSecurityRulesDisabled(async c=>{
+     const f=c.firestore();
+     await f.collection('admins').doc(TADM).set({email:'a1@x.y',role:'admin'});
+     await f.collection('admins').doc(OADM).set({email:'a2@x.y',role:'admin'});
+     await f.collection('meta').doc('groups').set({[GT]:{name:'tg',adminIds:{[TADM]:true}},tg2:{name:'t2',adminIds:{[OADM]:true}}},{merge:true});
+   });
+   const ta=env.authenticatedContext(TADM), oa=env.authenticatedContext(OADM);
+   const mk=(st,by)=>({status:st,markedAt:1,markedBy:by||TADM});
+   await T('group admin records NEW present mark (doc not yet existing)',async()=>{
+     await apiFor(ta,TADM).ref('attendance/'+GT+'/'+D+'/'+S1).set(mk('present'));
+     const v=(await apiFor(own,OWNER).ref('attendance/'+GT+'/'+D+'/'+S1).once('value')).val(); assert.strictEqual(v.status,'present');
+   });
+   await T('group admin records second student same day (doc exists)',async()=>{
+     await apiFor(ta,TADM).ref('attendance/'+GT+'/'+D+'/'+S2).set(mk('absent'));
+   });
+   await T('group admin records a student on another day',async()=>{
+     await apiFor(ta,TADM).ref('attendance/'+GT+'/'+D2+'/'+S1).set(mk('absent'));
+   });
+   await T('DENY group admin edits an existing mark (locked)',()=>assertRejects(apiFor(ta,TADM).ref('attendance/'+GT+'/'+D+'/'+S1).set(mk('absent'))));
+   await T('DENY group admin deletes an existing mark',()=>assertRejects(apiFor(ta,TADM).ref('attendance/'+GT+'/'+D+'/'+S1).remove()));
+   await T('DENY group admin writes status other than present/absent/late',()=>assertRejects(apiFor(ta,TADM).ref('attendance/'+GT+'/2026-12-05/'+S1).set(mk('excused'))));
+   await T('DENY group admin marks with someone elses markedBy',()=>assertRejects(apiFor(ta,TADM).ref('attendance/'+GT+'/2026-12-06/'+S1).set(mk('present',OWNER))));
+   await T('DENY other-group admin marks attendance of this group',()=>assertRejects(apiFor(oa,OADM).ref('attendance/'+GT+'/2026-12-07/'+S1).set(mk('present',OADM))));
+   await T('DENY group admin marks in a group he does not manage',()=>assertRejects(apiFor(ta,TADM).ref('attendance/tg2/2026-12-07/'+S1).set(mk('present'))));
+   await T('DENY group admin raw write of two days at once',()=>assertFails(ta.firestore().collection('attendance').doc(GT+'~2026-12').update({['d.2026-12-08.'+S1]:mk('present'),['d.2026-12-09.'+S1]:mk('present'),last:{date:'2026-12-08',uid:S1}})));
+   await T('DENY group admin raw write without last hint',()=>assertFails(ta.firestore().collection('attendance').doc(GT+'~2026-12').update({['d.2026-12-08.'+S1]:mk('present')})));
+   await T('DENY group admin overwrites whole doc / changes g',()=>assertFails(ta.firestore().collection('attendance').doc(GT+'~2026-12').set({g:'tg2',m:'2026-12',d:{},last:{date:'x',uid:'y'}})));
+   await T('DENY group admin deletes attendance doc',()=>assertFails(ta.firestore().collection('attendance').doc(GT+'~2026-12').delete()));
+   await T('owner still edits a locked mark',async()=>{
+     await apiFor(own,OWNER).ref('attendance/'+GT+'/'+D+'/'+S1).set({status:'late',markedAt:2,markedBy:OWNER});
+     assert.strictEqual((await apiFor(own,OWNER).ref('attendance/'+GT+'/'+D+'/'+S1).once('value')).val().status,'late');
+   });
+   await T('group admin reads attendance (staff)',()=>assertSucceeds(ta.firestore().collection('attendance').doc(GT+'~2026-12').get()));
+ }
  // ===== غير مسجل =====
  await T('anon reads owner doc (public, as before)',()=>assertSucceeds(anon.firestore().collection('meta').doc('owner').get()));
  for(const [c,d] of [['students',S],['admins',adminUid],['grades',S],['meta','schools'],['meta','groups'],['notifications','x'],['attendance','x'],['deletedAccounts',S]])

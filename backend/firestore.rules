@@ -10,6 +10,23 @@ service cloud.firestore {
     function isOwner() { return live() && get(/databases/$(database)/documents/meta/owner).data.uid == request.auth.uid; }
     function isAdmin() { return live() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
     function staff() { return isOwner() || isAdmin(); }
+    // تسجيل مسؤول لحالة حضور جديدة: يوم واحد وطالب واحد، بدون تغيير أو حذف أي حالة موجودة
+    // base: قيمة الحقل d الحالية. الحقل last = {date, uid} يحدد الخانة المكتوبة
+    function adminMark(docId, base) {
+      let r = request.resource.data;
+      return isAdmin()
+        && r.keys().hasOnly(['g', 'm', 'd', 'last'])
+        && r.g == docId.split('~')[0]
+        && get(/databases/$(database)/documents/meta/groups).data[r.g].adminIds[request.auth.uid] == true
+        && r.last.date is string && r.last.uid is string
+        && r.d.diff(base).removedKeys().size() == 0
+        && r.d.diff(base).affectedKeys().hasOnly([r.last.date])
+        && r.d[r.last.date].diff(base.get(r.last.date, {})).removedKeys().size() == 0
+        && r.d[r.last.date].diff(base.get(r.last.date, {})).changedKeys().size() == 0
+        && r.d[r.last.date].diff(base.get(r.last.date, {})).addedKeys().hasOnly([r.last.uid])
+        && r.d[r.last.date][r.last.uid].status in ['present', 'absent', 'late']
+        && r.d[r.last.date][r.last.uid].markedBy == request.auth.uid;
+    }
 
     // ---- المالك (قراءة عامة كما في القاعدة الحالية، لإظهار شاشة الإعداد الأول)
     match /meta/owner {
@@ -81,8 +98,11 @@ service cloud.firestore {
     match /attendance/{docId} {
       allow read: if staff()
         || (live() && resource.data.g == get(/databases/$(database)/documents/students/$(request.auth.uid)).data.get('groupId', ''));
-      // التسجيل والتعديل للمالك فقط (المسؤول قراءة فقط)
-      allow write: if isOwner();
+      // المالك: كل شيء. المسؤول: يسجّل حالة جديدة لطالب في مجموعته فقط (حاضر/غائب/متأخر)،
+      // ولا يعدّل ولا يحذف حالة مسجلة (مقفلة): التعديل للمالك فقط
+      allow create: if isOwner() || adminMark(docId, {});
+      allow update: if isOwner() || adminMark(docId, resource == null ? {} : resource.data.get('d', {}));
+      allow delete: if isOwner();
     }
 
     // ---- الإشعارات

@@ -477,9 +477,18 @@
         return ref.update(fp, fb.firestore.FieldValue.delete()).catch(function (e) { if (e && e.code === 'not-found') return null; throw e; });
       }
       if (batch) return batch.update(ref, fp, v);
-      return ref.update(fp, v).catch(function (e) {
+      if (L.col === 'attendance' && L.field.length === 3) {
+        // تسجيل حالة حضور: set مع دمج (ينشئ المستند أو يضيف الخانة) ويرفق last لتتحقق القواعد من الخانة المكتوبة
+        var doc = nest(L.field, v), ex = extra(L);
+        Object.keys(ex).forEach(function (k) { doc[k] = ex[k]; });
+        doc.last = { date: L.field[1], uid: L.field[2] };
+        return ref.set(doc, { merge: true });
+      }
+      var lastArgs = (L.col === 'attendance' && L.field.length === 3) ? ['last', { date: L.field[1], uid: L.field[2] }] : [];
+      return ref.update.apply(ref, [fp, v].concat(lastArgs)).catch(function (e) {
         if (e && e.code === 'not-found') {
           var o = nest(L.field, v);
+          if (lastArgs.length) o.last = lastArgs[1];
           var base = extra(L); Object.keys(base).forEach(function (k) { o[k] = base[k]; });
           return ref.set(o);
         }
