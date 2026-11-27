@@ -71,7 +71,12 @@
       '.si-table th,.si-table td{padding:6px 8px;border-bottom:1px solid #eef3f2;text-align:right;white-space:nowrap}' +
       '.si-table th{background:#f3f8f7;position:sticky;top:0}' +
       '.si-ok{color:#15766b;font-weight:700}.si-bad{color:#a64d3f;font-weight:700}.si-warn{color:#9a6b12;font-weight:700}' +
-      '.si-sum{font-size:13px;font-weight:700;color:#173f3d}' +
+      '.si-sum{font-size:13px;font-weight:700;color:#173f3d;line-height:1.8}' +
+      '.si-rows{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto;padding:2px}' +
+      '.si-mrow{display:grid;grid-template-columns:1.2fr 1.4fr 1.2fr 1fr auto;gap:8px;align-items:center;padding:10px;border:1px solid #dae7e5;border-radius:12px;background:#fbfdfd;position:relative}' +
+      '.si-mrow.bad{border-color:#d9776a;background:#fff6f4}' +
+      '.si-mrow input,.si-mrow select{width:100%;min-width:0;padding:9px 10px;border:1px solid #cddcde;border-radius:10px;font-size:13px;font-family:inherit}' +
+      '@media(max-width:720px){.si-mrow{grid-template-columns:1fr}.si-mrow::before{content:"طالب " attr(data-n);font-size:12px;font-weight:800;color:#0f766e}}' +
       '.si-bar-wrap{height:8px;border-radius:6px;background:#e5eeed;overflow:hidden}.si-bar-in{height:100%;width:0;background:#15766b;transition:width .2s}';
     document.head.appendChild(st);
   }
@@ -303,6 +308,104 @@
     }
   }
 
+
+  /* إضافة عدة طلاب يدويا: صفوف تحت بعض، إنشاء الحسابات وحفظ Excel */
+  function openMulti() {
+    styles();
+    if (dialog) dialog.remove();
+    dialog = document.createElement('dialog');
+    dialog.className = 'si-dialog';
+    var wrap = el('div', 'si-wrap');
+    wrap.appendChild(el('h2', '', 'إضافة عدة طلاب'));
+    wrap.appendChild(el('p', '', 'اكتب كل طالب في صف: الاسم والبريد الإلكتروني وكلمة المرور (لو فاضية بتتولد تلقائياً). المجموعة اختيارية. بعد الإنشاء ينزل ملف Excel فيه الحسابات.'));
+    var rowsBox = el('div', 'si-rows');
+    var msg = el('div', 'si-sum');
+    var progress = el('div', 'si-bar-wrap'); progress.hidden = true;
+    var progressIn = el('div', 'si-bar-in'); progress.appendChild(progressIn);
+    var groups = [];
+    var actions = el('div', 'si-row');
+    var addBtn = el('button', 'button', '+ إضافة صف'); addBtn.type = 'button';
+    var addFive = el('button', 'button', '+ 5 صفوف'); addFive.type = 'button';
+    var saveList = el('button', 'button', 'حفظ القائمة كـ Excel'); saveList.type = 'button';
+    var go = el('button', 'button primary', 'إنشاء الحسابات وحفظ Excel'); go.type = 'button';
+    var closeBtn = el('button', 'button', 'إغلاق'); closeBtn.type = 'button';
+    [addBtn, addFive, saveList, go, closeBtn].forEach(function (b) { actions.appendChild(b); });
+    wrap.appendChild(rowsBox); wrap.appendChild(actions); wrap.appendChild(msg); wrap.appendChild(progress);
+    dialog.appendChild(wrap);
+    document.body.appendChild(dialog);
+    if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
+
+    function addRow() {
+      var r = el('div', 'si-mrow');
+      var n = document.createElement('input'); n.placeholder = 'الاسم'; n.setAttribute('aria-label', 'الاسم'); n.autocomplete = 'off';
+      var em = document.createElement('input'); em.type = 'email'; em.placeholder = 'البريد الإلكتروني'; em.dir = 'ltr'; em.setAttribute('aria-label', 'البريد'); em.autocomplete = 'off';
+      var pw = document.createElement('input'); pw.placeholder = 'كلمة المرور (تلقائي لو فاضي)'; pw.dir = 'ltr'; pw.setAttribute('aria-label', 'كلمة المرور'); pw.autocomplete = 'off';
+      var g = document.createElement('select'); g.setAttribute('aria-label', 'المجموعة');
+      var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'بدون مجموعة'; g.appendChild(o0);
+      groups.forEach(function (x) { var o = document.createElement('option'); o.value = x.name; o.textContent = x.name; g.appendChild(o); });
+      var del = el('button', 'button small danger', 'حذف'); del.type = 'button';
+      del.addEventListener('click', function () { if (rowsBox.children.length > 1) r.remove(); else { n.value = em.value = pw.value = ''; } renumber(); });
+      [n, em, pw, g, del].forEach(function (x) { r.appendChild(x); });
+      rowsBox.appendChild(r); renumber();
+      return n;
+    }
+    function renumber() { Array.prototype.forEach.call(rowsBox.children, function (r, i) { r.setAttribute('data-n', String(i + 1)); }); }
+    function collect() {
+      var aoa = [['الاسم', 'البريد الإلكتروني', 'الهاتف', 'كلمة المرور', 'المجموعة']];
+      var map = [];
+      Array.prototype.forEach.call(rowsBox.children, function (r, i) {
+        var v = r.querySelectorAll('input,select');
+        var line = [v[0].value, v[1].value, '', v[2].value, v[3].value];
+        if (line.every(function (c) { return text(c) === ''; })) return;
+        aoa.push(line); map.push(i + 1);
+      });
+      return { aoa: aoa, map: map };
+    }
+    readContext().then(function (c) { groups = c.groups; Array.prototype.forEach.call(rowsBox.querySelectorAll('select'), function (sel) { groups.forEach(function (x) { var o = document.createElement('option'); o.value = x.name; o.textContent = x.name; sel.appendChild(o); }); }); }).catch(function () {});
+    addRow(); addRow(); addRow();
+    addBtn.addEventListener('click', function () { addRow().focus(); });
+    addFive.addEventListener('click', function () { for (var i = 0; i < 5; i++) addRow(); });
+    closeBtn.addEventListener('click', function () { if (!running) dialog.close(); });
+    dialog.addEventListener('cancel', function (e) { if (running) e.preventDefault(); });
+    saveList.addEventListener('click', function () {
+      var c = collect();
+      if (c.aoa.length < 2) { msg.className = 'si-sum si-bad'; msg.textContent = 'مفيش بيانات تتحفظ.'; return; }
+      loadXlsx().then(function (X) {
+        var wb = X.utils.book_new(); X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(c.aoa), 'الطلاب'); X.writeFile(wb, 'قائمة-الطلاب.xlsx');
+      });
+    });
+    go.addEventListener('click', function () {
+      if (running || !isOwner()) return;
+      var c = collect();
+      if (!c.aoa.length || c.aoa.length < 2) { msg.className = 'si-sum si-bad'; msg.textContent = 'أضف طالب واحد على الأقل.'; return; }
+      msg.className = 'si-sum'; msg.textContent = 'جاري التحقق...';
+      Promise.all([loadXlsx(), readContext()]).then(function (a) {
+        var parsed = parseRows(c.aoa, a[1]);
+        if (parsed.error) { msg.className = 'si-sum si-bad'; msg.textContent = parsed.error; return; }
+        var bad = [];
+        Array.prototype.forEach.call(rowsBox.children, function (r) { r.classList.remove('bad'); });
+        parsed.rows.forEach(function (row, i) {
+          var rowEl = rowsBox.children[c.map[i] - 1];
+          if (row.errors.length) { bad.push('صف ' + c.map[i] + ': ' + row.errors.join('، ')); if (rowEl) rowEl.classList.add('bad'); }
+        });
+        if (bad.length) { msg.className = 'si-sum si-bad'; msg.textContent = 'صحح الأخطاء الأول: ' + bad.join(' | '); return; }
+        if (!window.confirm('هيتم إنشاء ' + parsed.rows.length + ' حساب طالب حقيقي. تأكيد؟')) return;
+        running = true; go.disabled = true; progress.hidden = false;
+        return createStudents(parsed.rows, function (d, total) {
+          progressIn.style.width = Math.round(d / total * 100) + '%';
+          msg.className = 'si-sum'; msg.textContent = 'جاري الإنشاء ' + d + ' / ' + total;
+        }).then(function (results) {
+          running = false; go.disabled = false;
+          var created = results.filter(function (r) { return r.status === 'created'; }).length;
+          var failed = results.filter(function (r) { return r.status !== 'created'; });
+          msg.className = failed.length ? 'si-sum si-warn' : 'si-sum si-ok';
+          msg.textContent = 'تم إنشاء ' + created + ' من ' + results.length + (failed.length ? ' | لم يتم: ' + failed.map(function (r) { return r.row.email + ' (' + r.status + ')'; }).join('، ') : '') + '. تم تحميل ملف Excel بالنتيجة.';
+          try { resultsFile(results); } catch (e) {}
+        });
+      }).catch(function (e) { running = false; go.disabled = false; msg.className = 'si-sum si-bad'; msg.textContent = 'حصل خطأ: ' + (e && (e.message || e.code) || 'error'); });
+    });
+  }
+
   function inject() {
     if (!isOwner()) { var old = document.querySelector('.si-bar'); if (old) old.remove(); return; }
     var h1 = document.querySelector('.page-heading h1');
@@ -311,8 +414,11 @@
     if (existing) return;
     styles();
     var bar = el('div', 'si-bar');
-    var btn = el('button', 'button primary', 'استيراد طلاب من Excel'); btn.type = 'button';
+    var btn = el('button', 'button', 'استيراد طلاب من Excel'); btn.type = 'button';
     btn.addEventListener('click', openDialog);
+    var btn2 = el('button', 'button primary', 'إضافة عدة طلاب'); btn2.type = 'button';
+    btn2.addEventListener('click', openMulti);
+    bar.appendChild(btn2);
     bar.appendChild(btn);
     var heading = h1.closest('.page-heading');
     heading.parentNode.insertBefore(bar, heading.nextSibling);
