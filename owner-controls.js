@@ -79,6 +79,9 @@
   }
 
   function addInstallAction() {
+    var stale = document.querySelector('.install-action');
+    if (stale) stale.remove();
+    return;
     if (isStandalone() || document.querySelector('.install-action')) return;
     var actions = document.querySelector('.top-actions');
     if (!actions) return;

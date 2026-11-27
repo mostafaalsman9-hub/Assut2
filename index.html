@@ -276,7 +276,10 @@ body.light .location-strip span{color:#264b50}
 
     import('./app.js?v=2')
       .then(function () {
-        return import('./owner-controls.js?v=2');
+        return import('./owner-controls.js?v=3');
+      })
+      .then(function () {
+        return import('./student-import.js?v=1').catch(function (e) { console.warn('student-import', e); });
       })
       .then(function () {
         window.requestAnimationFrame(function () {
