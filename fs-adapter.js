@@ -8,6 +8,7 @@
   'use strict';
 
   var FS_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js';
+  var FS_SDK_ALT = 'https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js';
 
   function getApp(fb) {
     if (!fb.apps) return fb; // اختبارات
@@ -172,9 +173,14 @@
       if (fb.firestore) return Promise.resolve();
       if (sdkPromise) return sdkPromise;
       sdkPromise = new Promise(function (res, rej) {
-        var s = env.document.createElement('script');
-        s.src = FS_SDK; s.onload = res; s.onerror = function () { rej(new Error('تعذر تحميل Firestore')); };
-        env.document.head.appendChild(s);
+        var fin = false, ok = function () { if (!fin) { fin = true; res(); } };
+        var load = function (src, next) {
+          var s = env.document.createElement('script');
+          s.src = src; s.onload = ok; s.onerror = function () { if (next) next(); else if (!fin) { fin = true; rej(new Error('تعذر تحميل Firestore')); } };
+          env.document.head.appendChild(s);
+        };
+        load(FS_SDK, function () { load(FS_SDK_ALT); });
+        if (env.setTimeout) env.setTimeout(function () { if (!fin && !fb.firestore) load(FS_SDK_ALT); }, 7000);
       });
       return sdkPromise;
     }
@@ -183,7 +189,7 @@
       return loadSdk().then(function () {
         if (!fsInst) {
           fsInst = getApp(fb).firestore();
-          try { fsInst.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (e) {}
+          try { fsInst.settings({ experimentalForceLongPolling: true, merge: true }); } catch (e) {}
         }
         return fsInst;
       });
@@ -378,14 +384,20 @@
       });
     }
     function canDelta(path) { var p = seg(path); return (p[0] === 'notifications' && p.length === 1) || (p[0] === 'attendance' && p.length === 2); }
+    function withTimeout(p, ms) {
+      return new Promise(function (res, rej) {
+        var t = env.setTimeout ? env.setTimeout(function () { rej(new Error('انتهت مهلة الاتصال')); }, ms) : null;
+        p.then(function (v) { if (t) clearTimeout(t); res(v); }, function (e) { if (t) clearTimeout(t); rej(e); });
+      });
+    }
     function fetchFresh(path) {
       var old = cacheGet(path, true), offline = env.navigator && env.navigator.onLine === false;
       var fallback = function (e) { if (old && isStudentSync()) return old.v; throw e; };
       if (offline) return Promise.resolve().then(function () { return fallback(new Error('لا يوجد اتصال بالإنترنت')); });
       if (old && isStudentSync() && canDelta(path) && Date.now() - (old.f || old.t) < 86400000) {
-        return deltaRead(path, old.v).then(function (v) { cachePut(path, v, null, old.f || old.t); return v; }).catch(fallback);
+        return withTimeout(deltaRead(path, old.v), 12000).then(function (v) { cachePut(path, v, null, old.f || old.t); return v; }).catch(fallback);
       }
-      return readNode(path).then(function (v) { cachePut(path, v); return v; }).catch(fallback);
+      return withTimeout(readNode(path), 15000).then(function (v) { cachePut(path, v); return v; }).catch(fallback);
     }
     api.ref = function (p) { return new Ref(p, api); };
     api.get = function (ref) {
