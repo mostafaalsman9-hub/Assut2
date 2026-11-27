@@ -1,0 +1,45 @@
+/* الطبقة العصرية: تصميم داخلي موحد للمالك والمسؤول والطالب (v5) */
+:root{--m-p:#4f46e5;--m-p2:#7c3aed;--m-teal:#0d9488;--m-gold:#f59e0b;--m-ink:#0f172a;--m-mut:#64748b;--m-line:#e5e9f2;--m-bg:#f4f6fb;--m-card:#fff;--m-r:20px;--m-sh:0 1px 2px #0f172a0a,0 10px 30px #1e293b12}
+body{background:var(--m-bg)}
+.app-shell{background:radial-gradient(1000px 500px at 100% -10%,#e0e7ff80,transparent 60%),radial-gradient(800px 500px at 0% 110%,#ccfbf180,transparent 60%),var(--m-bg)}
+.content-inner{animation:mIn .45s cubic-bezier(.2,.7,.2,1) both}
+@keyframes mIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.card,.stat-card{border:1px solid var(--m-line);border-radius:var(--m-r);box-shadow:var(--m-sh);background:var(--m-card);position:relative;overflow:hidden}
+.card::before,.stat-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--m-p),var(--m-teal),var(--m-gold));opacity:.9}
+.card-header{border-bottom:1px solid var(--m-line);padding:16px 20px}
+.card-header h3{font-weight:800;color:var(--m-ink)}
+.stats-grid{gap:16px}
+.stat-card{padding:20px;transition:transform .25s,box-shadow .25s}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px #4f46e51f}
+.stat-value,.stat-card strong{font-weight:900;letter-spacing:-.5px}
+.stat-icon{border-radius:16px;box-shadow:0 8px 18px #0f172a1a}
+.hero-panel{border-radius:26px;background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 55%,#0d9488 130%);box-shadow:0 24px 50px #4338ca40;position:relative;overflow:hidden}
+.hero-panel::after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,#ffffff2b,transparent 65%);left:-60px;top:-80px;pointer-events:none}
+.page-heading{margin-bottom:18px}
+.page-heading h1{font-weight:900;color:var(--m-ink);letter-spacing:-.3px}
+.sidebar{background:linear-gradient(185deg,#0f172a 0%,#1e1b4b 100%)}
+.nav-item{border-radius:14px;transition:background .2s,transform .2s,color .2s}
+.nav-item:hover{transform:translateX(-3px)}
+.nav-item.active{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1c1300;box-shadow:0 8px 20px #f59e0b55}
+.topbar{background:#ffffffd9;backdrop-filter:saturate(180%) blur(14px)}
+.button{border-radius:12px;border:1px solid var(--m-line);transition:transform .15s,box-shadow .2s,background .2s;font-weight:700}
+.button:hover{transform:translateY(-1px);box-shadow:0 8px 18px #4f46e51a}
+.button:active{transform:scale(.97)}
+.button.primary{background:linear-gradient(135deg,var(--m-p),var(--m-p2));border:0;color:#fff;box-shadow:0 8px 20px #4f46e55c}
+.button.danger{background:#fff1f2;color:#be123c;border-color:#fecdd3}
+.data-table th{background:#f1f5ff;color:#475569;font-weight:800;font-size:12.5px;letter-spacing:.2px}
+.data-table tbody tr{transition:background .15s}
+.data-table tbody tr:hover{background:#f8faff}
+.badge{border-radius:999px;font-weight:800;padding:4px 12px}
+.avatar{background:linear-gradient(135deg,#e0e7ff,#ccfbf1);color:#3730a3;font-weight:800}
+.list-row{border-radius:14px;transition:background .15s}
+.list-row:hover{background:#f8faff}
+.field input,.field select,.field textarea{border-radius:12px;border:1.5px solid var(--m-line);background:#fbfcff;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--m-p);box-shadow:0 0 0 4px #4f46e51f;outline:0}
+.modal{border-radius:24px;box-shadow:0 30px 80px #0f172a55;animation:mIn .3s both}
+.empty{border-radius:20px}
+.mobile-nav{backdrop-filter:blur(14px);background:#ffffffee;border-top:1px solid var(--m-line);box-shadow:0 -10px 30px #0f172a12}
+.mobile-nav .active{color:var(--m-p)}
+@media (max-width:760px){.card,.stat-card{border-radius:18px}.stat-card{padding:14px}.hero-panel{border-radius:20px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{.content-inner{animation:none}}
