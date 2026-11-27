@@ -227,8 +227,8 @@
     wrap.appendChild(info);
     var row1 = el('div', 'si-row');
     var tplBtn = el('button', 'button', 'تحميل قالب Excel'); tplBtn.type = 'button';
-    var fileLabel = el('label', 'button primary', 'اختيار ملف Excel أو CSV');
-    var file = document.createElement('input'); file.type = 'file'; file.accept = '.xlsx,.xls,.csv'; file.style.display = 'none'; file.id = 'si-file';
+    var fileLabel = el('label', 'button primary', 'اختيار ملف Excel أو CSV'); fileLabel.style.position = 'relative'; fileLabel.style.cursor = 'pointer';
+    var file = document.createElement('input'); file.type = 'file'; file.accept = '.xlsx,.xls,.csv'; file.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)'; file.id = 'si-file';
     fileLabel.appendChild(file);
     var closeBtn = el('button', 'button', 'إغلاق'); closeBtn.type = 'button';
     row1.appendChild(tplBtn); row1.appendChild(fileLabel); row1.appendChild(closeBtn);

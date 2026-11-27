@@ -1,0 +1,67 @@
+/* تصميم احترافي موحد + تجاوب لكل الأجهزة (RTL) */
+:root{--t-navy:#0b2b3a;--t-teal:#0f766e;--t-teal2:#14958a;--t-gold:#e9b949;--t-ink:#14323a;--t-muted:#66818a;--t-line:#dfe9ea;--t-bg:#f3f7f8}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:"Cairo",system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;color:var(--t-ink)}
+.app-shell{background:linear-gradient(180deg,#f6f9fa,#eaf1f3)}
+.sidebar{background:linear-gradient(180deg,#0b2b3a 0%,#0d3a40 100%);box-shadow:inset -1px 0 0 #ffffff12}
+.nav-item{border-radius:12px;color:#b9d0d3}
+.nav-item:hover{background:#ffffff12;color:#fff}
+.nav-item.active{background:linear-gradient(135deg,#e9b949,#f4d27a);color:#0b2b3a;font-weight:800}
+.topbar{background:#ffffffef;backdrop-filter:blur(10px);border-bottom:1px solid var(--t-line);box-shadow:0 4px 18px #0b2b3a0d}
+.top-title{color:var(--t-navy)}
+.hero-panel{background:linear-gradient(135deg,#0b2b3a 0%,#0f766e 70%,#14958a 100%);box-shadow:0 14px 34px #0b2b3a33;border-radius:22px}
+.card,.stat-card{border:1px solid var(--t-line);border-radius:18px;box-shadow:0 8px 24px #0b2b3a0d;background:#fff}
+.stat-card{transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px #0b2b3a16}
+.page-heading h1{color:var(--t-navy);font-weight:800}
+.page-heading p{color:var(--t-muted)}
+.button{border-radius:12px;border:1px solid #cddcde;color:var(--t-navy);box-shadow:0 1px 2px #0b2b3a0d;font-family:inherit}
+.button:hover{border-color:var(--t-teal);color:var(--t-teal)}
+.button.primary,.button.primary:hover{background:linear-gradient(135deg,#0f766e,#14958a);border-color:transparent;color:#fff;box-shadow:0 6px 16px #0f766e40}
+input,select,textarea{font-family:inherit}
+.field input,.field select,.field textarea{border-radius:12px;border:1px solid #cddcde;background:#fbfdfd;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:0;border-color:var(--t-teal);box-shadow:0 0 0 3px #0f766e26}
+.data-table th{background:#f1f7f7;color:#2f5258;font-weight:800}
+.data-table tr:hover td{background:#f8fbfb}
+.segmented button.active{background:linear-gradient(135deg,#0f766e,#14958a);color:#fff;border-color:transparent}
+.auth-page{background:radial-gradient(circle at 80% 10%,#d6efeb,transparent 40%),linear-gradient(160deg,#eef5f6,#e3eef0)}
+.auth-card{border-radius:24px;box-shadow:0 24px 60px #0b2b3a1f}
+.modal{border-radius:20px}
+.content-inner{max-width:1200px;margin-inline:auto;width:100%}
+img,svg{max-width:100%}
+
+/* تابلت */
+@media(max-width:1024px){
+ .two-col{grid-template-columns:1fr}
+ .three-col{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* موبايل: كل شيء تحت بعض */
+@media(max-width:720px){
+ .three-col,.two-col,.form-grid,.stats-grid{grid-template-columns:1fr!important}
+ .stat-card{flex-direction:row!important;align-items:center!important}
+ .page-heading{flex-direction:column;align-items:stretch;gap:10px}
+ .heading-actions{flex-direction:column;margin:0;width:100%}
+ .heading-actions .button{width:100%}
+ .hero-panel{flex-direction:column;align-items:flex-start;text-align:right}
+ .card-header{flex-wrap:wrap}
+ .segmented{display:grid;grid-template-columns:1fr;gap:6px}
+ .segmented button{width:100%}
+ .modal{width:100%;max-height:92dvh;border-radius:20px 20px 0 0;align-self:end}
+ .modal-backdrop{padding:0;align-items:end}
+ .si-bar .button{width:100%;flex:1 1 100%}
+ /* الجداول كبطاقات */
+ .table-wrap{overflow:visible}
+ .data-table{min-width:0!important;width:100%;display:block}
+ .data-table thead{display:none}
+ .data-table tbody{display:block}
+ .data-table tr{display:block;margin:0 0 12px;padding:6px 12px;border:1px solid var(--t-line);border-radius:14px;background:#fff;box-shadow:0 4px 12px #0b2b3a0a}
+ .data-table td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0!important;border:0!important;border-bottom:1px dashed #e7eff0!important;text-align:left;white-space:normal;background:transparent!important}
+ .data-table td:last-child{border-bottom:0!important}
+ .data-table td::before{content:attr(data-label);flex:none;color:var(--t-muted);font-size:11.5px;font-weight:700;text-align:right}
+ .data-table td[data-label=""]::before{display:none}
+ .data-table td input,.data-table td select{max-width:60%}
+ .data-table td .button{flex:none}
+}
+@media(min-width:1500px){.content-inner{max-width:1320px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
