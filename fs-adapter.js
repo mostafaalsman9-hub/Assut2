@@ -506,7 +506,6 @@
           if (seg(l.path)[0] === 'notifications') fetchFresh(l.path).then(function (v) { if (!l.dead) emit(l, v); }).catch(function () {});
         });
         toast('وصلك إشعار جديد');
-        try { if (env.Notification && env.Notification.permission === 'granted') new env.Notification('منصة علوم الرياضة', { body: 'لديك إشعار جديد' }); } catch (e) {}
       }
       function start() {
         fsdb().then(function (db) {
