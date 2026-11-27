@@ -22,6 +22,11 @@ service cloud.firestore {
       allow read: if live() && name in ['schools', 'groups', 'subjects'];
       allow write: if isOwner() && name in ['schools', 'groups', 'subjects'];
     }
+    // ---- إشارة آخر إشعار (بدون نص): قراءة عامة لتطبيقات الجوال والكمبيوتر، كتابة للمالك والمسؤول
+    match /meta/latestNotif {
+      allow get: if true;
+      allow write: if staff();
+    }
     match /meta/ownerExperience {
       allow read, write: if isOwner();
     }
@@ -76,10 +81,8 @@ service cloud.firestore {
     match /attendance/{docId} {
       allow read: if staff()
         || (live() && resource.data.g == get(/databases/$(database)/documents/students/$(request.auth.uid)).data.get('groupId', ''));
-      allow write: if isOwner()
-        || (isAdmin()
-            && request.resource.data.g == docId.split('~')[0]
-            && get(/databases/$(database)/documents/meta/groups).data[request.resource.data.g].adminIds[request.auth.uid] == true);
+      // التسجيل والتعديل للمالك فقط (المسؤول قراءة فقط)
+      allow write: if isOwner();
     }
 
     // ---- الإشعارات

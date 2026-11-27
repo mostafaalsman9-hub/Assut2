@@ -106,12 +106,12 @@
 
   /* ================= وضع Firestore ================= */
   var TTL = { // بالدقائق
-    owner: 30, ownerExperience: 5, ownerExcelReports: 30,
+    latestNotif: 1, owner: 30, ownerExperience: 5, ownerExcelReports: 30,
     schools: 30, groups: 30, subjects: 30,
     admins: 10, students: 10, grades: 10, attendance: 10,
     notifications: 3, notifRead: 5, deletedAccounts: 5
   };
-  var BUNDLE = { schools: 1, groups: 1, subjects: 1, owner: 1, ownerExperience: 1, ownerExcelReports: 1 };
+  var BUNDLE = { latestNotif: 1, schools: 1, groups: 1, subjects: 1, owner: 1, ownerExperience: 1, ownerExcelReports: 1 };
   var COLL = { admins: 1, students: 1, grades: 1, notifications: 1, notifRead: 1, deletedAccounts: 1 };
   var NOTIF_LIMIT = 50;
 
@@ -211,10 +211,26 @@
       if (!ignoreAge && Date.now() - e.t > ttlFor(path)) return null;
       return e;
     }
-    function cachePut(path, v, t) {
-      var e = { t: t || Date.now(), v: v === undefined ? null : v };
+    // التخزين الدائم (للعمل بدون إنترنت) للطالب فقط. المالك والمسؤول: ذاكرة الجلسة فقط
+    function isStudentSync() {
+      var u = uid();
+      if (roleCache[u]) return roleCache[u] === 'student';
+      try { return !!store && store.getItem('assut_role:' + u) === 'student'; } catch (x) { return false; }
+    }
+    function cachePut(path, v, t, f) {
+      var now = Date.now();
+      var e = { t: t || now, f: f || now, v: v === undefined ? null : v };
       mem[ck(path)] = e;
-      if (store) { try { store.setItem(ck(path), JSON.stringify(e)); } catch (x) { /* ممتلئ */ } }
+      if (store && isStudentSync()) { try { store.setItem(ck(path), JSON.stringify(e)); } catch (x) { /* ممتلئ */ } }
+    }
+    function flushOrWipe(role) {
+      var prefix = 'fsc1:' + uid() + ':';
+      if (!store) return;
+      try {
+        store.setItem('assut_role:' + uid(), role);
+        if (role === 'student') { Object.keys(mem).forEach(function (k) { if (k.indexOf(prefix) === 0) { try { store.setItem(k, JSON.stringify(mem[k])); } catch (x) {} } }); }
+        else { var del = []; for (var i = 0; i < store.length; i++) { var k = store.key(i); if (k && k.indexOf(prefix) === 0) del.push(k); } del.forEach(function (k) { store.removeItem(k); }); }
+      } catch (x) {}
     }
     function allCacheKeys() {
       var prefix = 'fsc1:' + uid() + ':', keys = {};
@@ -234,7 +250,7 @@
         if (P.length >= K.length) { e.v = setIn(e.v, P.slice(K.length), v); }
         else { e.v = getIn(v, K.slice(P.length)); }
         e.v = e.v === undefined ? null : e.v;
-        cachePut(key, e.v, e.t);
+        cachePut(key, e.v, e.t, e.f);
       });
       notify(P.join('/'));
     }
@@ -289,7 +305,7 @@
       return api.get(api.ref('owner')).then(function (os) {
         if (os.exists() && os.val().uid === u) return 'owner';
         return api.get(api.ref('admins/' + u)).then(function (as) { return as.exists() ? 'admin' : 'student'; });
-      }).then(function (r) { roleCache[u] = r; return r; });
+      }).then(function (r) { roleCache[u] = r; flushOrWipe(r); return r; });
     }
 
     // قراءة مع مراعاة دور الطالب: لا يحمّل إلا بياناته ومجموعته
@@ -318,8 +334,42 @@
       return rawRead(path);
     }
 
+    // قراءة الفروقات فقط (للطالب): الإشعارات الأحدث، وشهر الحضور الحالي والسابق
+    function deltaRead(path, oldV) {
+      var parts = seg(path);
+      return authReady().then(fsdb).then(function (db) {
+        if (parts[0] === 'notifications' && parts.length === 1) {
+          var mx = 0; Object.keys(oldV || {}).forEach(function (k) { var c = oldV[k] && oldV[k].createdAt; if (c > mx) mx = c; });
+          return db.collection('notifications').where('createdAt', '>', mx).orderBy('createdAt', 'desc').limit(NOTIF_LIMIT).get().then(function (qs) {
+            var o = oldV ? JSON.parse(JSON.stringify(oldV)) : {}; qs.forEach(function (d) { o[d.id] = d.data(); });
+            var ks = Object.keys(o).sort(function (a, b) { return (o[b].createdAt || 0) - (o[a].createdAt || 0); }).slice(0, NOTIF_LIMIT);
+            var r = {}; ks.forEach(function (k) { r[k] = o[k]; }); return ks.length ? r : null;
+          });
+        }
+        if (parts[0] === 'attendance' && parts.length === 2) {
+          var g = parts[1], d = new Date(), ym = function (dt) { return dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2); };
+          var cur = ym(d), prev = ym(new Date(d.getFullYear(), d.getMonth() - 1, 1));
+          return Promise.all([prev, cur].map(function (m) { return db.collection('attendance').doc(g + '~' + m).get().then(function (x) { return [m, x.exists ? x.data().d || {} : {}]; }); })).then(function (rs) {
+            var o = oldV ? JSON.parse(JSON.stringify(oldV)) : {};
+            rs.forEach(function (r) {
+              Object.keys(o).forEach(function (dt) { if (dt.indexOf(r[0]) === 0) delete o[dt]; });
+              Object.keys(r[1]).forEach(function (dt) { o[dt] = r[1][dt]; });
+            });
+            return Object.keys(o).length ? o : null;
+          });
+        }
+        return null;
+      });
+    }
+    function canDelta(path) { var p = seg(path); return (p[0] === 'notifications' && p.length === 1) || (p[0] === 'attendance' && p.length === 2); }
     function fetchFresh(path) {
-      return readNode(path).then(function (v) { cachePut(path, v); return v; });
+      var old = cacheGet(path, true), offline = env.navigator && env.navigator.onLine === false;
+      var fallback = function (e) { if (old && isStudentSync()) return old.v; throw e; };
+      if (offline) return Promise.resolve().then(function () { return fallback(new Error('لا يوجد اتصال بالإنترنت')); });
+      if (old && isStudentSync() && canDelta(path) && Date.now() - (old.f || old.t) < 86400000) {
+        return deltaRead(path, old.v).then(function (v) { cachePut(path, v, null, old.f || old.t); return v; }).catch(fallback);
+      }
+      return readNode(path).then(function (v) { cachePut(path, v); return v; }).catch(fallback);
     }
     api.ref = function (p) { return new Ref(p, api); };
     api.get = function (ref) {

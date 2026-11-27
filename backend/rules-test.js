@@ -11,7 +11,7 @@ const mkLs=()=>{const m={};return{getItem:k=>m[k]||null,setItem:(k,v)=>{m[k]=v},
 function apiFor(ctx,uid){
   if(!ctx.__fs){const inst=ctx.firestore();ctx.__fs=inst;ctx.firestore=()=>inst;}
   const fbObj={firestore:Object.assign(()=>ctx.firestore(),{FieldPath:compat.firestore.FieldPath,FieldValue:compat.firestore.FieldValue}),auth:()=>({currentUser:uid?{uid}:null,onAuthStateChanged:()=>()=>{}})};
-  return __fsBuild('fs',{firebase:fbObj,localStorage:mkLs(),document:{visibilityState:'visible',addEventListener(){}},setInterval:()=>0});
+  return __fsBuild('fs',{firebase:fbObj,localStorage:mkLs(),document:{visibilityState:'visible',addEventListener(){}},setInterval:()=>0,get navigator(){return global.navigator}});
 }
 let pass=0,fail=0;
 const T=async(name,fn)=>{try{await fn();pass++;console.log('PASS',name)}catch(e){fail++;console.log('FAIL',name,'-',String(e.message).split('\n')[0])}};
@@ -53,6 +53,20 @@ const T=async(name,fn)=>{try{await fn();pass++;console.log('PASS',name)}catch(e)
    const st=(await a.ref('students').once('value')).val(); assert.deepStrictEqual(Object.keys(st),[S]);
    const at=(await a.ref('attendance').once('value')).val(); assert.ok(at[G]);
  });
+ await T('student delta sync: only newer notifications fetched, merged with cache; offline falls back to cache',async()=>{
+   const a=apiFor(stu,S);
+   await a.ref('students/'+S).once('value'); // يحدد دور الطالب ويفعّل التخزين الدائم
+   const first=(await a.ref('notifications').once('value')).val();
+   await a.ref('notifications').once('value');
+   await env.withSecurityRulesDisabled(async ctx=>{await ctx.firestore().collection('notifications').doc('nDelta').set({title:'new',createdAt:9999999999999,target:'all'});});
+   const real=Date.now; Date.now=()=>real()+11*60000; // انتهاء صلاحية المخزن المؤقت
+   try{
+     const second=(await a.ref('notifications').once('value')).val();
+     assert.ok(second.nDelta,'new one merged'); assert.ok(Object.keys(first||{}).every(k=>second[k]),'old kept');
+     global.navigator={onLine:false}; Date.now=()=>real()+30*60000;
+     const off=(await a.ref('notifications').once('value')).val(); assert.ok(off.nDelta,'offline served from cache');
+   }finally{Date.now=real;delete global.navigator;}
+ });
  await T('student reads own grades',async()=>{await apiFor(stu,S).ref('grades/'+S).once('value')});
  await T('DENY student lists all students',()=>assertFails(stu.firestore().collection('students').get()));
  await T('DENY student reads other student',()=>assertFails(stu.firestore().collection('students').doc(studs.find(x=>x!==S)).get()));
@@ -91,11 +105,15 @@ const T=async(name,fn)=>{try{await fn();pass++;console.log('PASS',name)}catch(e)
    const ga=env.authenticatedContext(gAdmins[0]);
    // هل هو مسؤول (admins doc)؟
    if(bk.admins[gAdmins[0]]){
-     await T('group admin can write attendance of own group',()=>assertSucceeds(ga.firestore().collection('attendance').doc(G+'~2026-11').set({g:G,m:'2026-11',d:{'2026-11-03':{[S]:'present'}}})));
+     await T('DENY group admin writes attendance of own group (owner only now)',()=>assertFails(ga.firestore().collection('attendance').doc(G+'~2026-11').set({g:G,m:'2026-11',d:{'2026-11-03':{[S]:'present'}}})));
      await T('DENY group admin writes attendance of another group',()=>assertFails(ga.firestore().collection('attendance').doc('zzz~2026-11').set({g:'zzz',m:'2026-11',d:{}})));
      await T('DENY group admin mismatched g vs docId',()=>assertFails(ga.firestore().collection('attendance').doc('zzz~2026-11').set({g:G,m:'2026-11',d:{}})));
+     await T('admin can write latestNotif',()=>assertSucceeds(ga.firestore().collection('meta').doc('latestNotif').set({id:'n1',ts:1})));
    }
  }
+ await T('anyone (no auth) can read latestNotif',()=>assertSucceeds(env.unauthenticatedContext().firestore().collection('meta').doc('latestNotif').get()));
+ await T('DENY student writes latestNotif',()=>assertFails(stu.firestore().collection('meta').doc('latestNotif').set({id:'x',ts:1})));
+ await T('DENY unauth reads meta/schools',()=>assertFails(env.unauthenticatedContext().firestore().collection('meta').doc('schools').get()));
  // ===== غير مسجل =====
  await T('anon reads owner doc (public, as before)',()=>assertSucceeds(anon.firestore().collection('meta').doc('owner').get()));
  for(const [c,d] of [['students',S],['admins',adminUid],['grades',S],['meta','schools'],['meta','groups'],['notifications','x'],['attendance','x'],['deletedAccounts',S]])
