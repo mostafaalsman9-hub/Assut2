@@ -40,7 +40,7 @@ window.__diag('start');
 })();
 </script>
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script defer src="./fs-adapter.js?v=8"></script>
+    <script defer src="./fs-adapter.js?v=9"></script>
     <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0)addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){})})</script>
     <script>
 (function(){var d=document.documentElement;d.className+=' booting';var fin=false;
@@ -99,7 +99,7 @@ q.onerror=function(){db.close();done(false)};}catch(e){try{db.close()}catch(_){}
     <link rel="stylesheet" crossorigin href="./styles.css?v=2">
     <link rel="stylesheet" href="./theme.css?v=4">
     <link rel="stylesheet" href="./modern.css?v=3">
-    <link rel="modulepreload" href="./app.js?v=10">
+    <link rel="modulepreload" href="./app.js?v=11">
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./app-icon.jpg">
     <style id="landing-style">
@@ -330,7 +330,7 @@ body.light .location-strip span{color:#264b50}
       button.disabled = true;
     });
 
-    import('./app.js?v=10')
+    import('./app.js?v=11')
       .then(function () {
         return import('./owner-controls.js?v=6');
       })
@@ -394,7 +394,7 @@ body.light .location-strip span{color:#264b50}
   });
 
   function afterSessionCheck() {
-    window.setTimeout(function () { try { import('./app.js?v=10'); } catch (e) {} }, 800);
+    window.setTimeout(function () { try { import('./app.js?v=11'); } catch (e) {} }, 800);
   }
   if (window.__sessionChecked) afterSessionCheck();
   else window.addEventListener('session-checked', afterSessionCheck);

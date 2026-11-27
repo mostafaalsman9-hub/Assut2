@@ -490,6 +490,36 @@
       });
     }
     api.refresh = function () { refreshStale(true); };
+    /* إشعار لحظي أثناء فتح المنصة: مستمع واحد على المستند الصغير meta/latestNotif (قراءة واحدة لكل تغيير) */
+    (function () {
+      var first = true, lastId = null;
+      function toast(msg) {
+        try {
+          var d = env.document, el = d.createElement('div');
+          el.setAttribute('dir', 'rtl'); el.textContent = msg;
+          el.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99999;background:#0f172a;color:#fff;border:1px solid #f59e0b;padding:12px 18px;border-radius:14px;font:600 14px sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.35)';
+          d.body.appendChild(el); env.setTimeout(function () { el.remove(); }, 6000);
+        } catch (e) {}
+      }
+      function onNew() {
+        listeners.slice().forEach(function (l) {
+          if (seg(l.path)[0] === 'notifications') fetchFresh(l.path).then(function (v) { if (!l.dead) emit(l, v); }).catch(function () {});
+        });
+        toast('وصلك إشعار جديد');
+        try { if (env.Notification && env.Notification.permission === 'granted') new env.Notification('منصة علوم الرياضة', { body: 'لديك إشعار جديد' }); } catch (e) {}
+      }
+      function start() {
+        fsdb().then(function (db) {
+          db.collection('meta').doc('latestNotif').onSnapshot(function (s) {
+            var id = s && s.exists ? (s.data() || {}).id : null;
+            if (first) { first = false; lastId = id; return; }
+            if (!id || id === lastId) return;
+            lastId = id; onNew();
+          }, function () {});
+        }).catch(function () {});
+      }
+      if (env.setTimeout) env.setTimeout(start, 2500);
+    })();
     if (env.setInterval) env.setInterval(function () { refreshStale(false); }, 60000);
     if (env.document && env.document.addEventListener) env.document.addEventListener('visibilitychange', function () { refreshStale(false); });
 
