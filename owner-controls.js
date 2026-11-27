@@ -284,6 +284,7 @@
       ownerExperienceRef = app.database().ref('ownerExperience');
       firebaseAuth.onAuthStateChanged(function (user) {
         currentUser = user;
+        try { if (user) localStorage.setItem('assut_session', '1'); else localStorage.removeItem('assut_session'); } catch (e) {}
         ownerVerified = false;
         window.__platformOwnerVerified = false;
         window.dispatchEvent(new Event('platform-owner-status'));

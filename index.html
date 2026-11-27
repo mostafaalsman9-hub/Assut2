@@ -31,8 +31,24 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
-    <script>try{var k=Object.keys(localStorage).some(function(x){return x.indexOf('firebase:authUser:')===0});if(k)document.documentElement.className+=' has-session'}catch(e){}</script>
-    <style id="boot-style">#boot-splash{display:none}.has-session #landing-shell{display:none!important}.has-session #boot-splash{display:flex;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#061321;color:#f7c94a;font-family:Cairo,Arial,sans-serif;font-weight:800;font-size:16px}#boot-splash i{width:34px;height:34px;border:4px solid rgba(247,201,74,.25);border-top-color:#f7c94a;border-radius:50%;animation:bs .8s linear infinite}@keyframes bs{to{transform:rotate(360deg)}}</style>
+    <script>
+(function(){var d=document.documentElement;d.className+=' booting';var fin=false;
+function done(s){if(fin)return;fin=true;d.classList.remove('booting');if(s)d.classList.add('has-session');window.__sessionChecked=true;window.dispatchEvent(new Event('session-checked'));}
+try{if(localStorage.getItem('assut_session')==='1'||Object.keys(localStorage).some(function(x){return x.indexOf('firebase:authUser:')===0}))return done(true);}catch(e){}
+try{if(!window.indexedDB||!indexedDB.databases)return done(false);
+setTimeout(function(){done(false)},900);
+indexedDB.databases().then(function(l){
+if(!l.some(function(x){return x.name==='firebaseLocalStorageDb'}))return done(false);
+var r=indexedDB.open('firebaseLocalStorageDb');
+r.onerror=function(){done(false)};
+r.onsuccess=function(){var db=r.result;try{if(!db.objectStoreNames.contains('firebaseLocalStorage')){db.close();return done(false);}
+var q=db.transaction('firebaseLocalStorage','readonly').objectStore('firebaseLocalStorage').getAllKeys();
+q.onsuccess=function(){var ok=(q.result||[]).some(function(k){return String(k).indexOf('firebase:authUser:')===0});db.close();done(ok);};
+q.onerror=function(){db.close();done(false)};}catch(e){try{db.close()}catch(_){}done(false)}};
+}).catch(function(){done(false)});}catch(e){done(false)}
+})();
+</script>
+    <style id="boot-style">#boot-splash{display:none}.booting #landing-shell{visibility:hidden}.has-session #landing-shell{display:none!important}.has-session #boot-splash{display:flex;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#061321;color:#f7c94a;font-family:Cairo,Arial,sans-serif;font-weight:800;font-size:16px}#boot-splash i{width:34px;height:34px;border:4px solid rgba(247,201,74,.25);border-top-color:#f7c94a;border-radius:50%;animation:bs .8s linear infinite}@keyframes bs{to{transform:rotate(360deg)}}</style>
     <link rel="stylesheet" crossorigin href="./styles.css?v=2">
     <link rel="modulepreload" href="./app.js?v=2">
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
@@ -276,7 +292,7 @@ body.light .location-strip span{color:#264b50}
 
     import('./app.js?v=2')
       .then(function () {
-        return import('./owner-controls.js?v=3');
+        return import('./owner-controls.js?v=4');
       })
       .then(function () {
         return import('./student-import.js?v=1').catch(function (e) { console.warn('student-import', e); });
@@ -331,11 +347,15 @@ body.light .location-strip span{color:#264b50}
     });
   });
 
-  if (document.documentElement.classList.contains('has-session')) {
-    loadOriginalApp('login');
-  } else {
-    window.setTimeout(function () { try { import('./app.js?v=2'); } catch (e) {} }, 1500);
+  function afterSessionCheck() {
+    if (document.documentElement.classList.contains('has-session')) {
+      loadOriginalApp('login');
+    } else {
+      window.setTimeout(function () { try { import('./app.js?v=2'); } catch (e) {} }, 1500);
+    }
   }
+  if (window.__sessionChecked) afterSessionCheck();
+  else window.addEventListener('session-checked', afterSessionCheck);
 
   var year = document.getElementById('year');
   if (year) year.textContent = String(new Date().getFullYear());
