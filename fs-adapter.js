@@ -66,21 +66,38 @@
   /* ================= وضع RTDB ================= */
   function rtdbApi(env) {
     var api = { mode: 'rtdb' };
-    function dbi() { return getApp(env.firebase).database(); }
+    function app() { return getApp(env.firebase); }
+    function dbi() { return app().database(); }
+    // الـ compat يستعيد جلسته بعد المودولار بقليل: ننتظر المستخدم قبل أي قراءة غير عامة
+    function authReady(path) {
+      var a = app().auth();
+      if (seg(path)[0] === 'owner' || a.currentUser) return Promise.resolve();
+      if (!global.localStorage || !global.localStorage.getItem('assut_session')) return Promise.resolve();
+      return new Promise(function (res) {
+        var done = false, un = null;
+        var t = setTimeout(function () { if (!done) { done = true; un && un(); res(); } }, 6000);
+        un = a.onAuthStateChanged(function (u) { if (u && !done) { done = true; clearTimeout(t); un && un(); res(); } });
+      });
+    }
     function rf(ref) { return ref.path ? dbi().ref(ref.path) : dbi().ref(); }
     api.ref = function (p) { return new Ref(p, api); };
-    api.get = function (ref) { return rf(ref).once('value').then(function (s) { return new Snap(ref.key, s.val()); }); };
+    api.get = function (ref) { return authReady(ref.path).then(function () { return rf(ref).once('value'); }).then(function (s) { return new Snap(ref.key, s.val()); }); };
     api.onValue = function (ref, cb, err) {
-      var r = rf(ref);
-      var h = r.on('value', function (s) { cb(new Snap(ref.key, s.val())); }, err);
-      return function () { r.off('value', h); };
+      var dead = false, off = null;
+      authReady(ref.path).then(function () {
+        if (dead) return;
+        var r = rf(ref);
+        var h = r.on('value', function (s) { cb(new Snap(ref.key, s.val())); }, err);
+        off = function () { r.off('value', h); };
+      });
+      return function () { dead = true; if (off) off(); };
     };
-    api.set = function (ref, v) { return rf(ref).set(v === undefined ? null : v); };
-    api.remove = function (ref) { return rf(ref).remove(); };
+    api.set = function (ref, v) { return authReady(ref.path).then(function () { return rf(ref).set(v === undefined ? null : v); }); };
+    api.remove = function (ref) { return authReady(ref.path).then(function () { return rf(ref).remove(); }); };
     api.push = function (ref) { var k = rf(ref).push().key; return new Ref(ref.path + '/' + k, api); };
-    api.update = function (ref, m) { return rf(ref).update(m); };
+    api.update = function (ref, m) { return authReady('x').then(function () { return rf(ref).update(m); }); };
     api.transaction = function (ref, fn) {
-      return rf(ref).transaction(fn).then(function (r) { return { committed: r.committed, snapshot: new Snap(ref.key, r.snapshot.val()) }; });
+      return authReady(ref.path).then(function () { return rf(ref).transaction(fn); }).then(function (r) { return { committed: r.committed, snapshot: new Snap(ref.key, r.snapshot.val()) }; });
     };
     api.refresh = function () {};
     api.dbFor = function (app) { return app.database(); };
