@@ -189,7 +189,21 @@
       });
     }
     function curUser() { var a = getApp(fb).auth(); return a && a.currentUser; }
+    // هل يوجد جلسة دخول محفوظة؟ (يحددها سكربت الصفحة). بدونها لا ننتظر Firebase Auth ثماني ثوانٍ
+    function sessionKnown() {
+      return new Promise(function (res) {
+        if (env.__sessionChecked) return res();
+        if (!env.addEventListener) return res();
+        var done = false, f = function () { if (!done) { done = true; res(); } };
+        env.addEventListener('session-checked', f); setTimeout(f, 1500);
+      });
+    }
+    function hasSession() { try { return !!(env.document && env.document.documentElement.classList.contains('has-session')); } catch (e) { return true; } }
     function authReady() {
+      if (curUser()) return Promise.resolve(curUser());
+      return sessionKnown().then(function () { return curUser() || (hasSession() ? authWait() : null); });
+    }
+    function authWait() {
       if (curUser()) return Promise.resolve(curUser());
       return new Promise(function (res) {
         var done = false, un = null;
@@ -274,7 +288,7 @@
     function rawRead(path) {
       var parts = seg(path);
       var L = locate(parts);
-      return authReady().then(function () { return fsdb(); }).then(function (db) {
+      return (parts[0] === 'owner' ? Promise.resolve() : authReady()).then(function () { return fsdb(); }).then(function (db) {
         var top = parts[0];
         if (L.doc) {
           return db.collection(L.col).doc(L.doc).get().then(function (d) {
@@ -507,7 +521,7 @@
   }
 
   function build(mode, env) {
-    env = env || { firebase: global.firebase, localStorage: global.localStorage, document: global.document, setInterval: global.setInterval.bind(global) };
+    env = env || { firebase: global.firebase, localStorage: global.localStorage, document: global.document, setInterval: global.setInterval.bind(global), navigator: global.navigator, addEventListener: global.addEventListener.bind(global), get __sessionChecked() { return global.__sessionChecked; } };
     var api = mode === 'fs' ? fsApi(env) : rtdbApi(env);
     api.db = { ref: function (p) { return api.ref(p || ''); } };
     if (mode === 'rtdb') api.dbFor = function (app) { return app.database(); };
