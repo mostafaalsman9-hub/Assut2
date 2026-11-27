@@ -47,7 +47,7 @@
   function verifyOwner() {
     var user = getCurrentUser();
     if (!firebaseApp || !firebaseAuth || !user) return Promise.resolve(false);
-    return firebaseApp.database().ref('owner/uid').once('value').then(function (snapshot) {
+    return window.__fs.dbFor(firebaseApp).ref('owner/uid').once('value').then(function (snapshot) {
       var databaseOwnerUid = String(snapshot.val() || '');
       return databaseOwnerUid === String(user.uid || '') || isKnownOwner(user);
     }).catch(function () {
@@ -217,7 +217,7 @@
       }
          ownerVerified = true;
          window.__platformOwnerVerified = true;
-      return firebaseApp.database().ref(collection).once('value');
+      return window.__fs.dbFor(firebaseApp).ref(collection).once('value');
     }).then(function (snapshot) {
       var matches = [];
       snapshot.forEach(function (child) {
@@ -263,7 +263,7 @@
             if (collection === 'students') {
               updates['grades/' + targetUser.uid] = null;
             }
-            return firebaseApp.database().ref().update(updates);
+            return window.__fs.dbFor(firebaseApp).ref().update(updates);
           });
         }
       });
@@ -293,7 +293,7 @@
       var app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(CONFIG);
       firebaseApp = app;
       firebaseAuth = app.auth();
-      ownerExperienceRef = app.database().ref('ownerExperience');
+      ownerExperienceRef = window.__fs.dbFor(app).ref('ownerExperience');
       firebaseAuth.onAuthStateChanged(function (user) {
         currentUser = user;
         try { if (user) localStorage.setItem('assut_session', '1'); else localStorage.removeItem('assut_session'); } catch (e) {}
@@ -305,7 +305,7 @@
           return;
         }
         var ownerCheck = updateOwnerStatus();
-        var deletedCheck = app.database().ref('deletedAccounts/' + user.uid).once('value').then(function (snapshot) {
+        var deletedCheck = window.__fs.dbFor(app).ref('deletedAccounts/' + user.uid).once('value').then(function (snapshot) {
           if (snapshot.exists() && firebaseAuth.currentUser && firebaseAuth.currentUser.uid === user.uid) {
             window.alert('هذا الحساب محذوف ولا يمكنه استخدام المنصة.');
             return firebaseAuth.signOut();
@@ -706,7 +706,7 @@
     if (!window.firebase || !config) return null;
     try {
       var app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(config);
-      return { app: app, auth: app.auth(), db: app.database() };
+      return { app: app, auth: app.auth(), db: window.__fs.dbFor(app) };
     } catch (error) {
       console.warn('تعذر تجهيز تصدير Excel', error);
       return null;

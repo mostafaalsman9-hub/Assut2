@@ -40,7 +40,7 @@
 
   function getDb() {
     var app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(CONFIG);
-    return { app: app, db: app.database() };
+    return { app: app, db: window.__fs.dbFor(app) };
   }
 
   function genPassword() {

@@ -1,0 +1,100 @@
+rules_version = '2';
+// قواعد Cloud Firestore لمنصة علوم الرياضة (ترجمة لقواعد Realtime Database الحالية)
+// المالك: meta/owner.uid | المسؤول: وجود مستند admins/{uid} | الطالب: أي مستخدم مسجل غيرهما
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    // الحساب غير محذوف
+    function live() { return signedIn() && !exists(/databases/$(database)/documents/deletedAccounts/$(request.auth.uid)); }
+    function isOwner() { return live() && get(/databases/$(database)/documents/meta/owner).data.uid == request.auth.uid; }
+    function isAdmin() { return live() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function staff() { return isOwner() || isAdmin(); }
+
+    // ---- المالك (قراءة عامة كما في القاعدة الحالية، لإظهار شاشة الإعداد الأول)
+    match /meta/owner {
+      allow read: if true;
+      allow create: if live() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if live() && resource.data.uid == request.auth.uid;
+    }
+    // ---- المدارس والمجموعات والمواد: قراءة لأي مسجل، كتابة للمالك
+    match /meta/{name} {
+      allow read: if live() && name in ['schools', 'groups', 'subjects'];
+      allow write: if isOwner() && name in ['schools', 'groups', 'subjects'];
+    }
+    match /meta/ownerExperience {
+      allow read, write: if isOwner();
+    }
+    match /meta/ownerExcelReports {
+      allow read: if isOwner();
+      allow write: if false;
+    }
+
+    // ---- المسؤولون
+    match /admins/{uid} {
+      allow get: if live() && (request.auth.uid == uid || isOwner());
+      allow list: if staff();
+      allow create, delete: if isOwner();
+      allow update: if isOwner() || (live() && request.auth.uid == uid
+        && request.resource.data.get('email', null) == resource.data.get('email', null)
+        && request.resource.data.get('role', null) == resource.data.get('role', null));
+    }
+
+    // ---- الطلاب (أشد من الحالي: الطالب يقرأ سجله فقط ولا يرى باقي الطلاب)
+    match /students/{uid} {
+      allow get: if live() && (request.auth.uid == uid || staff());
+      allow list: if staff();
+      allow create: if isOwner()
+        || (live() && request.auth.uid == uid && request.resource.data.get('status', null) == 'pending');
+      allow update: if isOwner()
+        // المسؤول: تغيير الحالة فقط (قبول/حظر)
+        || (isAdmin()
+            && request.resource.data.get('name', null) == resource.data.get('name', null)
+            && request.resource.data.get('email', null) == resource.data.get('email', null)
+            && request.resource.data.get('phone', null) == resource.data.get('phone', null)
+            && request.resource.data.get('groupId', null) == resource.data.get('groupId', null)
+            && request.resource.data.get('schoolId', null) == resource.data.get('schoolId', null)
+            && request.resource.data.get('status', null) != resource.data.get('status', null)
+            && request.resource.data.get('status', null) in ['active', 'banned'])
+        // الطالب نفسه: لا يغيّر الحالة ولا المدرسة ولا المجموعة
+        || (live() && request.auth.uid == uid
+            && request.resource.data.get('status', null) == resource.data.get('status', null)
+            && request.resource.data.get('uid', null) == resource.data.get('uid', null)
+            && request.resource.data.get('groupId', null) == resource.data.get('groupId', null)
+            && request.resource.data.get('schoolId', null) == resource.data.get('schoolId', null));
+      allow delete: if isOwner();
+    }
+
+    // ---- الدرجات: الطالب يقرأ درجاته، المالك يكتب فقط
+    match /grades/{uid} {
+      allow get: if live() && (request.auth.uid == uid || staff());
+      allow list: if staff();
+      allow write: if isOwner();
+    }
+
+    // ---- الحضور: مستند لكل مجموعة وشهر، الاسم {groupId}~{yyyy-mm}
+    match /attendance/{docId} {
+      allow read: if staff()
+        || (live() && resource.data.g == get(/databases/$(database)/documents/students/$(request.auth.uid)).data.get('groupId', ''));
+      allow write: if isOwner()
+        || (isAdmin()
+            && request.resource.data.g == docId.split('~')[0]
+            && get(/databases/$(database)/documents/meta/groups).data[request.resource.data.g].adminIds[request.auth.uid] == true);
+    }
+
+    // ---- الإشعارات
+    match /notifications/{id} {
+      allow read: if live();
+      allow write: if staff();
+    }
+    match /notifRead/{uid} {
+      allow read, write: if live() && request.auth.uid == uid;
+    }
+
+    // ---- الحسابات المحذوفة
+    match /deletedAccounts/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isOwner());
+      allow write: if signedIn() && isOwner();
+    }
+  }
+}
