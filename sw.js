@@ -1,5 +1,5 @@
 /* عامل الخدمة: تشغيل واجهة المنصة بدون إنترنت (البيانات تُخزّن للطالب فقط داخل التطبيق) */
-const V = 'assut-shell-v9';
+const V = 'assut-shell-v10';
 const SHELL = ['./', './index.html', './app.js?v=9', './owner-controls.js?v=6', './student-import.js?v=5', './responsive.js?v=2', './autosave.js?v=1',
   './fs-adapter.js?v=8', './styles.css?v=2', './theme.css?v=4', './modern.css?v=3', './favicon.svg', './app-icon.jpg'];
 self.addEventListener('install', e => {

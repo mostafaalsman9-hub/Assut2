@@ -33,11 +33,11 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
     <script>window.__DB_MODE = (function(){try{return localStorage.getItem("assut_db")||"fs"}catch(e){return "fs"}})();</script>
     <script>
-(function(){var V='v9',t0=Date.now(),log=[],box=null;
+(function(){var V='v10',t0=Date.now(),log=[],box=null;
 window.__diag=function(m){log.push(Math.round((Date.now()-t0)/100)/10+'s '+m);if(log.length>40)log.shift();};
 window.__hs=function(u,r,o){try{if(o)localStorage.setItem('assut_hint:'+u,JSON.stringify({r:r,o:o}));else localStorage.removeItem('assut_hint:'+u);}catch(e){}};
 window.__diag('بدء الصفحة');
-setInterval(function(){var sp=document.querySelector('.loading-screen');
+setInterval(function(){var sp=document.querySelector('[aria-busy="true"]');
 if(!sp||Date.now()-t0<3000){if(box)box.style.display='none';return;}
 if(!box){box=document.createElement('div');box.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:2147483647;background:rgba(0,0,0,.78);color:#9f9;font:11px/1.5 monospace;padding:6px 8px;direction:rtl;text-align:right;pointer-events:none;max-height:40vh;overflow:hidden';document.body.appendChild(box);}
 box.style.display='block';box.textContent='نسخة '+V+' | '+Math.round((Date.now()-t0)/1000)+'ث | '+(navigator.onLine?'متصل':'غير متصل')+'\n'+log.slice(-6).join(' ← ');box.style.whiteSpace='pre-wrap';},700);
