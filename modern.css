@@ -43,3 +43,5 @@ body{background:var(--m-bg)}
 @media (max-width:760px){.card,.stat-card{border-radius:18px}.stat-card{padding:14px}.hero-panel{border-radius:20px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{.content-inner{animation:none}}
+.bulk-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 14px;border-radius:14px;background:#fff1f2;border:1px solid #fecdd3;font-weight:700;color:#9f1239}
+.data-table input[type=checkbox]{width:18px;height:18px;accent-color:#4f46e5;cursor:pointer}

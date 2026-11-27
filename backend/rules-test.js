@@ -42,6 +42,13 @@ const T=async(name,fn)=>{try{await fn();pass++;console.log('PASS',name)}catch(e)
    await a.ref('students/'+S+'/groupId').set(G);
    await a.ref('attendance/'+G+'/2026-11-02/'+S).set('present');
  });
+ await T('owner bulk-deletes students (students+grades+deletedAccounts in one batch) and they are locked out',async()=>{
+   const a=apiFor(own,OWNER); const victims=studs.filter(x=>x!==S).slice(0,2); assert.ok(victims.length>0);
+   const up={}; victims.forEach(id=>{up['students/'+id]=null;up['grades/'+id]=null;up['deletedAccounts/'+id]={uid:id,name:'x',email:'e',role:'student',deletedAt:1,deletedBy:OWNER};});
+   await a.ref('').update(up);
+   for(const id of victims){ assert.ok(!(await a.ref('students/'+id).once('value')).exists());
+     const vc=env.authenticatedContext(id); await assertFails(vc.firestore().collection('students').doc(id).get()); }
+ });
  // ===== الطالب =====
  await T('student reads own record + schools/groups/subjects + notifications',async()=>{
    const a=apiFor(stu,S);
