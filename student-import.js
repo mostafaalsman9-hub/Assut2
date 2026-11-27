@@ -261,8 +261,9 @@
         if (parsed.error) { msg.textContent = parsed.error; msg.className = 'si-sum si-bad'; return; }
         render(parsed.rows);
       }).catch(function (e) {
+        console.error('student-import', e);
         msg.className = 'si-sum si-bad';
-        msg.textContent = 'تعذر قراءة الملف. تأكد إنه Excel (xlsx/xls) أو CSV.';
+        msg.textContent = 'تعذر قراءة الملف. تأكد إنه Excel (xlsx/xls) أو CSV. (' + (e && (e.message || e.code) || 'error') + ')';
       });
     });
 
