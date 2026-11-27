@@ -200,7 +200,9 @@
     function uid() { var u = curUser(); return u ? u.uid : 'anon'; }
 
     /* ---------- التخزين المؤقت ---------- */
-    function ttlFor(path) { var t = TTL[seg(path)[0]]; return (t === undefined ? 5 : t) * 60000; }
+    // الطالب: بيانات شبه ثابتة تبقى مدة أطول لتوفير القراءات
+    var TTL_STUDENT = { owner: 720, schools: 720, groups: 720, subjects: 720, admins: 720, students: 60, grades: 30, deletedAccounts: 30 };
+    function ttlFor(path) { var k = seg(path)[0], t = (isStudentSync() && TTL_STUDENT[k] !== undefined) ? TTL_STUDENT[k] : TTL[k]; return (t === undefined ? 5 : t) * 60000; }
     function ck(path) { return 'fsc1:' + uid() + ':' + path; }
     function cacheGet(path, ignoreAge) {
       var e = mem[ck(path)];
