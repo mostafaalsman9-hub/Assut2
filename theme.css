@@ -65,3 +65,4 @@ img,svg{max-width:100%}
 }
 @media(min-width:1500px){.content-inner{max-width:1320px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.hero-panel :is(h1,h2,h3){font-size:clamp(17px,2.2vw,25px)!important;line-height:1.7;font-weight:800}
