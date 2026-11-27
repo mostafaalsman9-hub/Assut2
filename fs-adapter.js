@@ -207,18 +207,53 @@
       });
     }
     function hasSession() { try { return !!(env.document && env.document.documentElement.classList.contains('has-session')); } catch (e) { return true; } }
+    var authDead = false, bridging = null, bridgeFailAt = 0;
     function authReady() {
       if (curUser()) return Promise.resolve(curUser());
-      return sessionKnown().then(function () { if (curUser()) return curUser(); if (!hasSession()) return null; dg('انتظار استعادة الجلسة'); return authWait().then(function (u) { dg(u ? 'الجلسة جاهزة' : 'الجلسة لم تُستعد (مهلة)'); return u; }); });
+      var ma0 = global.__modAuth;
+      if (ma0 && ma0.currentUser) return authWait(700).then(function (u) { return u || bridgeAuth(); });
+      if (authDead) return Promise.resolve(null);
+      return sessionKnown().then(function () {
+        if (curUser()) return curUser();
+        if (!hasSession()) return null;
+        dg('انتظار استعادة الجلسة');
+        return authWait().then(function (u) {
+          if (u) { dg('الجلسة جاهزة'); return u; }
+          return bridgeAuth();
+        });
+      });
     }
-    function authWait() {
+    // مهلة قصيرة لاستعادة الجلسة في مكتبة التوافق، وإن لم تُستعد ننقل المستخدم من مكتبة التطبيق الأساسية
+    function authWait(ms) {
       if (curUser()) return Promise.resolve(curUser());
       return new Promise(function (res) {
         var done = false, un = null;
-        var t = setTimeout(function () { if (!done) { done = true; if (un) un(); res(null); } }, 8000);
+        var t = setTimeout(function () { if (!done) { done = true; if (un) un(); res(null); } }, ms || 2500);
         un = getApp(fb).auth().onAuthStateChanged(function (u) { if (u && !done) { done = true; clearTimeout(t); un && un(); res(u); } });
       });
     }
+    function bridgeAuth() {
+      if (bridging) return bridging;
+      if (bridgeFailAt && Date.now() - bridgeFailAt < 20000) return Promise.resolve(null);
+      bridging = new Promise(function (res) {
+        var tries = 0;
+        (function go() {
+          var ma = global.__modAuth;
+          if (!ma) { if (tries++ < 20) return setTimeout(go, 150); dg('لا توجد جلسة أساسية'); authDead = true; return res(null); }
+          Promise.resolve(ma.authStateReady ? ma.authStateReady() : null).then(function () {
+            var mu = ma.currentUser;
+            if (!mu) { dg('لا يوجد مستخدم مسجل'); authDead = true; return res(null); }
+            dg('نقل الجلسة بين المكتبتين');
+            return getApp(fb).auth().updateCurrentUser(mu).then(function () {
+              var u = curUser(); dg(u ? 'نقل الجلسة نجح' : 'نقل الجلسة فشل'); if (!u) authDead = true; res(u || null);
+            });
+          }).catch(function (e) { dg('نقل الجلسة خطأ: ' + ((e && (e.code || e.message)) || e)); authDead = true; res(null); });
+        })();
+      });
+      bridging.then(function (u) { bridging = null; if (!u) bridgeFailAt = Date.now(); else bridgeFailAt = 0; });
+      return bridging;
+    }
+    api.bridgeAuth = bridgeAuth;
     function uid() { var u = curUser(); return u ? u.uid : 'anon'; }
 
     /* ---------- التخزين المؤقت ---------- */

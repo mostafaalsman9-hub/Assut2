@@ -33,7 +33,7 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
     <script>window.__DB_MODE = (function(){try{return localStorage.getItem("assut_db")||"fs"}catch(e){return "fs"}})();</script>
     <script>
-(function(){var V='v8',t0=Date.now(),log=[],box=null;
+(function(){var V='v9',t0=Date.now(),log=[],box=null;
 window.__diag=function(m){log.push(Math.round((Date.now()-t0)/100)/10+'s '+m);if(log.length>40)log.shift();};
 window.__hs=function(u,r,o){try{if(o)localStorage.setItem('assut_hint:'+u,JSON.stringify({r:r,o:o}));else localStorage.removeItem('assut_hint:'+u);}catch(e){}};
 window.__diag('بدء الصفحة');
@@ -45,7 +45,7 @@ if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller;na
 })();
 </script>
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script defer src="./fs-adapter.js?v=7"></script>
+    <script defer src="./fs-adapter.js?v=8"></script>
     <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0)addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){})})</script>
     <script>
 (function(){var d=document.documentElement;d.className+=' booting';var fin=false;
@@ -103,8 +103,8 @@ q.onerror=function(){db.close();done(false)};}catch(e){try{db.close()}catch(_){}
 <style id="boot-style">#boot-splash{display:none}.booting #landing-shell{visibility:hidden}.has-session #boot-splash-off{display:flex;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#061321;color:#f7c94a;font-family:Cairo,Arial,sans-serif;font-weight:800;font-size:16px}#boot-splash i{width:34px;height:34px;border:4px solid rgba(247,201,74,.25);border-top-color:#f7c94a;border-radius:50%;animation:bs .8s linear infinite}@keyframes bs{to{transform:rotate(360deg)}}</style>
     <link rel="stylesheet" crossorigin href="./styles.css?v=2">
     <link rel="stylesheet" href="./theme.css?v=4">
-    <link rel="stylesheet" href="./modern.css?v=2">
-    <link rel="modulepreload" href="./app.js?v=8">
+    <link rel="stylesheet" href="./modern.css?v=3">
+    <link rel="modulepreload" href="./app.js?v=9">
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./app-icon.jpg">
     <style id="landing-style">
@@ -335,7 +335,7 @@ body.light .location-strip span{color:#264b50}
       button.disabled = true;
     });
 
-    import('./app.js?v=8')
+    import('./app.js?v=9')
       .then(function () {
         return import('./owner-controls.js?v=6');
       })
@@ -399,7 +399,7 @@ body.light .location-strip span{color:#264b50}
   });
 
   function afterSessionCheck() {
-    window.setTimeout(function () { try { import('./app.js?v=8'); } catch (e) {} }, 800);
+    window.setTimeout(function () { try { import('./app.js?v=9'); } catch (e) {} }, 800);
   }
   if (window.__sessionChecked) afterSessionCheck();
   else window.addEventListener('session-checked', afterSessionCheck);
